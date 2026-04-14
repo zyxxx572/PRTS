@@ -1,0 +1,952 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="我的遊戲">
+<link rel="apple-touch-icon" href="icon.png.jpeg">
+<title>PRTS 終端 - V11 (滿版照片排版)</title>
+<style>
+    :root { --ark-yellow: #f5d027; --ark-dark: #121212; --ark-gray: #252525; --ark-text: #e0e0e0; --ark-blue: #00b0ff; --ark-red: #ff5252; --ark-gold: #ffb300; }
+    body { background: var(--ark-dark); color: var(--ark-text); font-family: 'PingFang TC', sans-serif; margin: 0; padding: 0; padding-bottom: 80px; line-height: 1.4; }
+    
+    .header { background: #000; padding: 15px; border-bottom: 2px solid var(--ark-yellow); position: sticky; top: 0; z-index: 100; display: flex; justify-content: space-between; align-items: center; }
+    .stats-bar span { font-weight: bold; margin-left: 10px; font-size: 0.9rem; }
+    
+    .tabs { display: flex; overflow-x: auto; background: #111; border-bottom: 1px solid #333; }
+    .tab-btn { background: transparent; color: #888; padding: 12px 15px; border: none; cursor: pointer; white-space: nowrap; font-weight: bold; flex: 1; text-align: center; }
+    .tab-btn.active { color: var(--ark-yellow); border-bottom: 3px solid var(--ark-yellow); }
+
+    .container { padding: 10px; }
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+    
+    .panel { background: var(--ark-gray); padding: 15px; border-radius: 4px; margin-bottom: 15px; border-left: 4px solid var(--ark-yellow); box-shadow: 0 2px 5px rgba(0,0,0,0.5); }
+    h2 { font-size: 1.1rem; border-bottom: 1px solid #444; padding-bottom: 8px; margin-top: 0; margin-bottom: 12px; color: var(--ark-yellow); display: flex; justify-content: space-between; align-items: center; }
+    
+    .task-item { background: #333; padding: 10px; margin-bottom: 6px; border-radius: 4px; display: flex; justify-content: space-between; align-items: center; font-size: 0.9rem; }
+    .progress-tag { color: var(--ark-yellow); font-weight: bold; font-size: 1rem; }
+    
+    .reward-bar { display: flex; font-size: 0.75rem; color: #aaa; background: #1a1a1a; padding: 8px; border-radius: 4px; margin-bottom: 12px; overflow-x: auto; border: 1px solid #333; }
+    .reward-node { text-align: center; min-width: 60px; border-right: 1px solid #444; padding: 0 5px; cursor: pointer;}
+    .reward-node:last-child { border-right: none; }
+    .reward-node.achieved { color: var(--ark-yellow); font-weight: bold; }
+    .reward-node.claimed { color: #555; text-decoration: line-through; }
+
+    input, select { background: #000; color: #fff; border: 1px solid #555; padding: 8px; border-radius: 2px; }
+    button { background: var(--ark-yellow); color: #000; border: none; padding: 8px 12px; cursor: pointer; font-weight: bold; border-radius: 2px; transition: 0.2s; }
+    button:active { filter: brightness(0.8); }
+    button:disabled { background: #555; color: #888; cursor: not-allowed; }
+    button.dark { background: #444; color: #fff; }
+    
+    .custom-task-card { background: #1e1e1e; border: 1px solid #444; margin-bottom: 10px; padding: 12px; border-radius: 4px; position: relative; overflow: hidden; }
+    .custom-task-card.main { border-left: 5px solid var(--ark-blue); }
+    .custom-task-card.special { border-left: 5px solid #4caf50; }
+    .ct-header { display: flex; justify-content: space-between; margin-bottom: 5px; font-size: 0.8rem; color: #aaa; }
+    .ct-title { font-size: 1.05rem; font-weight: bold; color: #fff; margin-bottom: 8px; }
+    .ct-reward { color: var(--ark-yellow); font-size: 0.9rem; font-weight: bold; }
+    .ct-btn { width: 100%; margin-top: 10px; padding: 10px; background: #333; color: #fff; border: 1px solid #555; }
+    .ct-btn:hover { background: var(--ark-yellow); color: #000; }
+    
+    .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 10px; margin-top: 10px;}
+    .card { background: #1a1a1a; border: 1px solid #444; padding: 10px; text-align: center; border-radius: 4px; cursor: pointer;}
+    .card:hover { border-color: var(--ark-yellow); }
+    
+    .medal-icon { width: 50px; height: 50px; background: #333; border-radius: 50%; margin: 0 auto 5px; border: 2px solid var(--ark-gold); display: flex; align-items: center; justify-content: center; font-size: 1.5rem; }
+    .collect-icon { width: 45px; height: 45px; background: #222; border: 1px solid #555; margin: 0 auto 5px; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; }
+
+    #sys-log { background: #000; color: #4caf50; font-family: monospace; padding: 10px; height: 100px; overflow-y: auto; border: 1px solid #333; font-size: 0.85rem; margin-top: 10px; }
+
+    #gacha-overlay { display: none; position: fixed; top:0; left:0; right:0; bottom:0; background: rgba(0,0,0,0.95); z-index: 9999; flex-direction: column; align-items: center; justify-content: center;}
+    .modal { display: none; position: fixed; top: 10%; left: 5%; right: 5%; background: #222; border: 2px solid var(--ark-yellow); padding: 15px; z-index: 3000; border-radius: 8px; max-width: 400px; margin: auto;}
+    #overlay { display: none; position: fixed; top:0; left:0; right:0; bottom:0; background: rgba(0,0,0,0.7); z-index: 2999;}
+
+    /* 全新主頁視窗排版 (滿版照片) */
+    .viewport {
+        position: relative; width: 100%; height: 75vh; 
+        background: #000; /* 背景改為純黑，避免圖片沒載入時太突兀 */
+        border-radius: 8px; overflow: hidden; border: 1px solid #333; box-shadow: 0 4px 10px rgba(0,0,0,0.8);
+    }
+    
+    /* 填滿整個框框的照片 */
+    .bg-photo-full {
+        position: absolute;
+        top: 0; left: 0;
+        width: 100%; height: 100%;
+        object-fit: cover; /* 關鍵：讓照片填滿不留黑邊 */
+        z-index: 0; /* 放最底層 */
+    }
+    
+    /* 假想立繪區 (當沒放照片時的佔位符) */
+    .assistant-bg {
+        position: absolute; right: 0; bottom: 0; width: 100%; height: 100%;
+        display: flex; align-items: center; justify-content: center;
+        font-size: 8rem; color: #333; z-index: 0;
+    }
+    
+        /* 名字區塊 (移到底部，語音框的上方) */
+    .info-layer { 
+        position: absolute; bottom: 110px; left: 20px; z-index: 3; 
+        text-shadow: 2px 2px 6px rgba(0,0,0,0.9), -1px -1px 4px rgba(0,0,0,0.6); 
+    }
+
+    
+    /* 底部黑條與語音/按鈕區 */
+    .assistant-bottom-bar {
+        position: absolute; bottom: 0; left: 0; right: 0; padding: 20px 15px;
+        background: linear-gradient(180deg, transparent 0%, rgba(0,0,0,0.7) 40%, rgba(0,0,0,0.95) 100%);
+        display: flex; align-items: flex-end; justify-content: space-between; gap: 15px; z-index: 2;
+    }
+    
+    /* 正常人類視力的語音框 */
+    .voice-text {
+        font-size: 0.95rem; color: #ddd; font-style: italic; line-height: 1.5;
+        background: rgba(0,0,0,0.4); padding: 10px 15px; border-radius: 8px 8px 8px 0;
+        border-left: 3px solid var(--ark-yellow); flex: 1; backdrop-filter: blur(2px);
+    }
+    
+    /* 圓形替換按鈕 */
+    .change-btn {
+        width: 45px; height: 45px; border-radius: 50%; background: rgba(30,30,30,0.8);
+        border: 2px solid var(--ark-yellow); color: var(--ark-yellow);
+        display: flex; align-items: center; justify-content: center; font-size: 1.2rem;
+        cursor: pointer; flex-shrink: 0; box-shadow: 0 0 10px rgba(245, 208, 39, 0.2); transition: 0.2s;
+    }
+    .change-btn:active { transform: scale(0.9); }
+    
+    /* 替換選單彈出視窗 */
+    #ass-menu {
+        display: none; position: absolute; bottom: 80px; right: 15px; 
+        background: rgba(20,20,20,0.95); border: 1px solid #555; padding: 15px; 
+        border-radius: 8px; z-index: 10; width: 220px; box-shadow: 0 5px 15px rgba(0,0,0,0.9);
+    }
+</style>
+</head>
+<body>
+
+    <div class="header">
+        <h1 style="margin:0; font-size:1.1rem; color:var(--ark-yellow); font-weight:900; letter-spacing:1px;">PRTS 終端</h1>
+        <div class="stats-bar">
+            <span style="color:var(--ark-blue)" id="ui-oru">💎0</span>
+            <span style="color:#4caf50" id="ui-cert">🎫0</span>
+            <span style="color:var(--ark-red)" id="ui-pull">🎟️0</span>
+            <span style="color:#ff9800" id="ui-box">📦0</span>
+        </div>
+    </div>
+
+    <div class="tabs">
+        <button class="tab-btn active" onclick="switchTab('tab-home', this)">主頁</button>
+        <button class="tab-btn" onclick="switchTab('tab-tasks', this)">作戰終端</button>
+        <button class="tab-btn" onclick="switchTab('tab-gacha', this)">採購中心</button>
+        <button class="tab-btn" onclick="switchTab('tab-depot', this)">倉庫</button>
+        <button class="tab-btn" onclick="switchTab('tab-archive', this)">幹員檔案</button>
+        <button class="tab-btn" onclick="switchTab('tab-records', this)">榮譽紀錄</button>
+    </div>
+
+    <div class="container">
+        
+        <div id="tab-home" class="tab-content active" style="padding: 0 5px;">
+            <div class="viewport">
+                
+                <img src="請把你的照片網址或檔案路徑貼在這邊.jpg" id="ass-bg-img" class="bg-photo-full" style="display: none;">
+                <div class="assistant-bg" id="ass-bg-icon">👤</div>
+                
+                <div class="info-layer" id="ass-info"></div>
+                
+                <div id="ass-menu">
+                    <div style="margin-bottom:8px; font-size:0.85rem; color:#aaa; font-weight:bold;">📋 指派助理</div>
+                    <select id="ass-select" style="width:100%; margin-bottom:10px;"></select>
+                    <button onclick="confirmAssistant()" style="width:100%;">確認切換</button>
+                </div>
+
+                <div class="assistant-bottom-bar">
+                    <div class="voice-text" id="ass-voice"></div>
+                    <div class="change-btn" onclick="toggleAssistantMenu()">🔄</div>
+                </div>
+            </div>
+        </div>
+
+        <div id="tab-tasks" class="tab-content">
+            <div class="panel">
+                <h2><span>每日任務</span> <span id="daily-total">⚡️ 0 / 13</span></h2>
+                <div class="reward-bar" id="daily-rewards"></div>
+                <div id="daily-list"></div>
+            </div>
+
+            <div class="panel">
+                <h2><span>每週任務</span> <span id="weekly-total">⚡️ 0 / 14</span></h2>
+                <div class="reward-bar" id="weekly-rewards"></div>
+                <div id="weekly-list"></div>
+            </div>
+
+            <div class="panel" style="border-left-color: #4caf50;">
+                <h2 style="color: #4caf50;">發布特勤任務</h2>
+                <div style="display:flex; flex-direction:column; gap:8px;">
+                    <div style="display:flex; gap:8px;">
+                        <select id="sp-diff" style="flex:1;"><option value="S">難度: S</option><option value="A">難度: A</option><option value="B">難度: B</option><option value="C" selected>難度: C</option></select>
+                    </div>
+<div style="display:flex; gap:8px;">
+    <input type="text" id="sp-name" placeholder="輸入任務名稱..." style="flex:3; box-sizing:border-box;">
+    <input type="number" id="sp-hours" placeholder="時限(小時)" style="flex:1; box-sizing:border-box;">
+</div>
+
+                    <div style="display:flex; gap:8px;">
+                        <input type="number" id="sp-amt" placeholder="數量" style="flex:2;">
+                        <select id="sp-rtype" style="flex:1;"><option value="oru">💎</option><option value="pull">🎟️</option><option value="box">📦</option></select>
+                        <button onclick="addSpecialTask()" style="flex:2; background:#4caf50; color:#fff;">發布</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="panel" style="border-left-color: #4caf50;">
+                <h2 style="color: #4caf50;">特勤任務</h2>
+                <div id="special-task-container"></div>
+            </div>
+
+            <div class="panel" style="border-left-color: var(--ark-blue);">
+                <h2 style="color: var(--ark-blue);">發布主線任務</h2>
+                <div style="display:flex; flex-direction:column; gap:8px;">
+                    <div style="display:flex; gap:8px;">
+                        <select id="mn-diff" style="flex:1;"><option value="SSS">難度: SSS</option><option value="SS">難度: SS</option><option value="S" selected>難度: S</option></select>
+                    </div>
+                    <input type="text" id="mn-name" placeholder="輸入任務名稱..." style="width:100%; box-sizing:border-box;">
+                    <div style="display:flex; gap:8px;">
+                        <input type="number" id="mn-amt" placeholder="數量" style="flex:2;">
+                        <select id="mn-rtype" style="flex:1;"><option value="oru">💎</option><option value="pull">🎟️</option><option value="box">📦</option></select>
+                        <button onclick="addMainTask()" style="flex:2; background:var(--ark-blue); color:#fff;">發布</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="panel" style="border-left-color: var(--ark-blue);">
+                <h2 style="color: var(--ark-blue);">主線任務</h2>
+                <div id="main-task-container"></div>
+            </div>
+            
+            <div id="sys-log">終端初始化完成。<br>等待博士下達指令...</div>
+        </div>
+
+        <div id="tab-gacha" class="tab-content">
+            <div class="panel">
+                <h2>幹員尋訪</h2>
+                <p style="font-size: 0.85rem; color: #aaa;">重複獲得幹員將轉化為憑證 🎫。若持有【特製千層酥空盒】每抽返還 20 💎。</p>
+                <div style="display:flex; gap:10px;">
+                    <button onclick="gachaRoll(1)" style="flex:1; padding:15px; font-size:1.1rem;">單次尋訪<br><span style="font-size:0.8rem">(600💎/1🎟️)</span></button>
+                    <button onclick="gachaRoll(10)" style="flex:1; padding:15px; font-size:1.1rem; background:var(--ark-blue); color:white;">十連尋訪<br><span style="font-size:0.8rem">(6000💎/10🎟️)</span></button>
+                </div>
+            </div>
+            <div class="panel">
+                <h2 style="color: #4caf50;">憑證商店 <span id="shop-discount-tag" style="font-size:0.8rem; color:var(--ark-red); display:none;">(VIP 9折)</span></h2>
+                <div class="grid" id="store-grid"></div>
+            </div>
+        </div>
+
+        <div id="tab-depot" class="tab-content">
+            <div class="panel" style="border-left-color: #4caf50;">
+                <h2 style="color: #4caf50;">📊 物資庫存概覽</h2>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; text-align: center;">
+                    <div style="background:#111; padding:15px 10px; border-radius:4px;">
+                        <div style="font-size: 0.85rem; color: #aaa; margin-bottom: 5px;">合成玉</div>
+                        <b id="depot-oru" style="color:var(--ark-blue); font-size: 1.3rem;">0</b>
+                    </div>
+                    <div style="background:#111; padding:15px 10px; border-radius:4px;">
+                        <div style="font-size: 0.85rem; color: #aaa; margin-bottom: 5px;">採購憑證</div>
+                        <b id="depot-cert" style="color:#4caf50; font-size: 1.3rem;">0</b>
+                    </div>
+                    <div style="background:#111; padding:15px 10px; border-radius:4px;">
+                        <div style="font-size: 0.85rem; color: #aaa; margin-bottom: 5px;">尋訪憑證</div>
+                        <b id="depot-pull" style="color:var(--ark-red); font-size: 1.3rem;">0</b>
+                    </div>
+                    <div style="background:#111; padding:15px 10px; border-radius:4px;">
+                        <div style="font-size: 0.85rem; color: #aaa; margin-bottom: 5px;">物資箱</div>
+                        <b id="depot-box" style="color:#ff9800; font-size: 1.3rem;">0</b>
+                    </div>
+                </div>
+            </div>
+
+            <div class="panel" style="border-left-color: #ff9800;">
+                <h2 style="color: #ff9800;">📦 物資箱解析</h2>
+                <p style="font-size: 0.85rem; color: #aaa;">有機率開出合成玉、憑證、物資箱或藏品。</p>
+                <button onclick="openBox()" style="width: 100%; padding: 12px; font-size: 1.05rem; background: #ff9800;">消耗 1 個物資箱解析 (持有: <span id="btn-box-count">0</span>)</button>
+            </div>
+            
+            <div class="panel" style="border-left-color: var(--ark-gold);">
+                <h2 style="color: var(--ark-gold);">👔 造型兌換樞紐</h2>
+                <p style="font-size: 0.85rem; color: #aaa;">為你擁有的幹員解鎖專屬外觀配置（解鎖後在助理介面會有特殊展示）。</p>
+                <div style="display:flex; gap:8px;">
+                    <select id="skin-sel" style="flex:1;">
+                        <option value="">請選擇要換裝的幹員...</option>
+                    </select>
+                    <button onclick="useSkin()" style="background:var(--ark-gold); color:#000;">消耗造型卷換裝 (持有: <span id="btn-skin-count">0</span>)</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="tab-archive" class="tab-content">
+            <div class="panel">
+                <h2>幹員名冊</h2>
+                <p style="font-size: 0.85rem; color: #aaa;">信賴達到 200% 可獲得蝕刻章。</p>
+                <div class="grid" id="op-grid"></div>
+            </div>
+        </div>
+
+        <div id="tab-records" class="tab-content">
+            <div class="panel" style="border-left-color: var(--ark-gold);">
+                <h2 style="color: var(--ark-gold);">蝕刻章館</h2>
+                <div class="grid" id="medal-grid"></div>
+            </div>
+            <div class="panel" style="border-left-color: #aaa;">
+                <h2 style="color: #aaa;">集成戰略藏品</h2>
+                <div class="grid" id="collect-grid"></div>
+            </div>
+        </div>
+
+    </div>
+
+    <div id="gacha-overlay" onclick="this.style.display='none'">
+        <div style="font-size: 2rem; color: var(--ark-yellow); font-weight: bold; margin-bottom: 20px;">尋訪結果</div>
+        <div id="gacha-result-name" style="font-size: 1.2rem; color: white; background: #222; padding: 20px; border: 2px solid var(--ark-yellow); border-radius: 8px; text-align: center; max-height: 50vh; overflow-y: auto;"></div>
+        <button class="dark" style="margin-top: 30px;">點擊任意處繼續</button>
+    </div>
+
+    <div id="overlay" onclick="closeModal()"></div>
+    <div id="op-modal" class="modal">
+        <h2 id="m-op-name" style="color: white; border: none; margin-bottom: 5px;">幹員名字</h2>
+        <div style="font-size: 0.9rem; color: #aaa; margin-bottom: 15px;">信賴值: <span id="m-op-trust" style="color: var(--ark-yellow); font-weight: bold;">0</span>%</div>
+        <h3 style="font-size: 1rem; color: #4caf50; border-bottom: 1px solid #444; padding-bottom: 5px;">🎁 贈送信物</h3>
+        <div style="display:flex; gap:5px;">
+            <select id="m-gift-sel" style="flex:1;"></select>
+            <button onclick="giveGift()">贈送</button>
+        </div>
+        <div id="m-op-fav-hint" style="font-size: 0.8rem; color: #aaa; margin-top: 5px;"></div>
+        <button class="dark" onclick="closeModal()" style="width: 100%; margin-top: 15px;">關閉</button>
+    </div>
+
+<script>
+    const DB_OPS = [
+        { id: "莫斯提馬", n: "莫斯提馬", fav: "拉特蘭甜點" },
+        { id: "菲亞梅塔", n: "菲亞梅塔", fav: "拉特蘭甜點" },
+        { id: "蕾繆安", n: "蕾繆安", fav: "拉特蘭甜點" },
+        { id: "能天使", n: "能天使", fav: "拉特蘭甜點" },
+        { id: "德克薩斯", n: "德克薩斯", fav: "敘拉古巧克力" },
+        { id: "拉普蘭德", n: "拉普蘭德", fav: "敘拉古巧克力" },
+        { id: "凜冬", n: "凜冬", fav: "烏薩斯紅茶" },
+        { id: "真理", n: "真理", fav: "烏薩斯紅茶" },
+        { id: "芙蘭卡", n: "芙蘭卡", fav: "黑鋼保養套件" },
+        { id: "雷蛇", n: "雷蛇", fav: "黑鋼保養套件" }
+    ];
+    
+    const DB_STORE = [
+        { id: "尋訪憑證", n: "尋訪憑證", price: 80, icon: "🎟️" },
+        { id: "自選造型", n: "自選造型", price: 200, icon: "👔" },
+        { id: "拉特蘭甜點", n: "拉特蘭甜點", price: 15, icon: "🍰" },
+        { id: "敘拉古巧克力", n: "敘拉古巧克力", price: 15, icon: "🍫" },
+        { id: "黑鋼保養套件", n: "黑鋼保養套件", price: 15, icon: "🛡️" },
+        { id: "烏薩斯紅茶", n: "烏薩斯紅茶", price: 15, icon: "☕" }
+    ];
+
+    const DB_MEDALS = [
+        { id: "m_day", n: "日常的終點", icon: "☀️", desc: "達成一整天每日任務" },
+        { id: "m_week", n: "完美的七天", icon: "🗓️", desc: "連續一整週完成所有任務" },
+        { id: "m_task10", n: "初級幹員", icon: "🔰", desc: "達成10個任務" },
+        { id: "m_task50", n: "資深幹員", icon: "🎖️", desc: "達成50個任務" },
+        { id: "m_task100", n: "羅德島之刃", icon: "⚔️", desc: "達成100個任務" },
+        { id: "m_rich", n: "財富積累者", icon: "💎", desc: "持有合成玉超過10,000" },
+        { id: "m_shop", n: "採購部常客", icon: "🛒", desc: "憑證商店消費超過10次" },
+        { id: "m_gacha", n: "歐羅巴的祝福", icon: "✨", desc: "十連抽出現兩名以上新幹員" },
+        { id: "m_trust", n: "靈魂共鳴", icon: "❤️", desc: "任意幹員信賴值達到200%" },
+        { id: "m_srank", n: "終末進軍", icon: "🔥", desc: "完成 5 個難度為「S」的任務" }
+    ];
+
+    const DB_COLLECTS = [
+        { id: "c_penguin", n: "企鵝物流至尊黑卡", icon: "💳", desc: "商店一律 9 折" },
+        { id: "c_black", n: "黑鋼戰術匕首", icon: "🗡️", desc: "每日滿 10 點額外空投 50 💎" },
+        { id: "c_ursus", n: "厚重的烏薩斯字典", icon: "📕", desc: "贈禮信賴額外 +5%" },
+        { id: "c_syra", n: "特製千層酥空盒", icon: "🥧", desc: "抽卡每抽返還 20 💎" },
+        { id: "c_later", n: "高階槍械保養油", icon: "🛢️", desc: "開箱出稀有獎勵機率提升" },
+        { id: "c_fiam", n: "一把未送出的銃", icon: "🔫", desc: "每週全勤補發尋訪憑證 x1" }
+    ];
+
+    const D_TASKS = [ 
+        {id:"d1", n:"解譯維多利亞古卷", w:1.5}, {id:"d2", n:"分析維多利亞外勤情報", w:1.5},
+        {id:"d3", n:"後勤制服洗消作業", w:1},   {id:"d4", n:"核心戰術理論研習", w:2},
+        {id:"d5", n:"輔助學科文獻閱覽", w:2},   {id:"d6", n:"PRTS 底層代碼優化", w:2},
+        {id:"d7", n:"攝取生理機能維持補給", w:1}, {id:"d8", n:"強制終端休眠與能級回收", w:2}
+    ];
+    
+        const W_TASKS = [
+        {id:"w1", n:"解譯維多利亞古卷", max:5, w:2}, {id:"w2", n:"分析維多利亞外勤情報", max:5, w:2},
+        {id:"w3", n:"PRTS 底層代碼優化", max:5, w:2}, {id:"w4", n:"核心戰術理論研習", max:5, w:2},
+        {id:"w5", n:"輔助學科文獻閱覽", max:5, w:2}, {id:"w6", n:"觀看作戰紀錄", max:1, w:2},
+        {id:"w7", n:"強制終端休眠與能級回收", max:5, w:2},
+     		{id:"w8", n:"生理機能活化程序", max:2, w:2}     
+    ];
+
+    let currentOpId = ""; 
+
+    let s = {
+        oru: 100, cert: 60, pull: 0, box: 0,
+        dExp: 0, wExp: 0, dStatus: {}, wProg: {}, dClaim: [0,0,0,0,0,0], wClaim: [0,0,0,0,0,0,0],
+        customTasks: [], lastDailyDate: "", lastWeeklyMonday: "",
+        ops: {}, tokens: {},
+        relics: [], unlockedMedals: [],
+        stats: { tasksCompleted: 0, sRankTasks: 0, shopBuys: 0 },
+        assistant: null 
+    };
+
+    function saveLocal() { localStorage.setItem('PRTS_SAVE_V8', JSON.stringify(s)); checkMedals(); }
+    function loadLocal() {
+        let saved = localStorage.getItem('PRTS_SAVE_V8');
+        if(!saved) saved = localStorage.getItem('PRTS_SAVE_V7'); 
+        
+        if(saved) {
+            let parsed = JSON.parse(saved);
+            s = { ...s, ...parsed };
+            if(!s.relics) s.relics = [];
+            if(!s.unlockedMedals) s.unlockedMedals = [];
+            if(!s.stats) s.stats = { tasksCompleted: 0, sRankTasks: 0, shopBuys: 0 };
+            if(!s.assistant) s.assistant = null;
+        }
+        checkAutoReset(); updateUI();
+    }
+
+        function checkAutoReset() { 
+        const now = new Date(); 
+        // 改用 toLocaleDateString('en-CA') 會強制輸出 YYYY-MM-DD 格式的「本地時間」
+        const todayStr = now.toLocaleDateString('en-CA'); 
+        
+        if (s.lastDailyDate !== todayStr) { 
+            s.dStatus = {}; s.dExp = 0; s.dClaim = [0,0,0,0,0,0]; 
+            s.lastDailyDate = todayStr; log("系統：每日任務已重置"); 
+        }
+        
+        const day = now.getDay(); 
+        const diff = now.getDate() - day + (day === 0 ? -6 : 1);
+        const mondayDate = new Date(now.setDate(diff)).toLocaleDateString('en-CA');
+        
+        if (s.lastWeeklyMonday !== mondayDate) { 
+            s.wProg = {}; s.wExp = 0; s.wClaim = [0,0,0,0,0,0,0]; 
+            s.lastWeeklyMonday = mondayDate; log("系統：每週任務已重置"); 
+        }
+    }
+    function log(msg) {
+        let box = document.getElementById('sys-log');
+        box.innerHTML = `[${new Date().toLocaleTimeString()}] ${msg}<br>` + box.innerHTML;
+    }
+
+    function updateUI() {
+        document.getElementById("ui-oru").innerText = "💎" + s.oru;
+        document.getElementById("ui-cert").innerText = "🎫" + s.cert;
+        document.getElementById("ui-pull").innerText = "🎟️" + s.pull; 
+        document.getElementById("ui-box").innerText = "📦" + s.box;
+
+        document.getElementById("depot-oru").innerText = s.oru;
+        document.getElementById("depot-cert").innerText = s.cert;
+        document.getElementById("depot-pull").innerText = s.pull;
+        document.getElementById("depot-box").innerText = s.box;
+        
+        document.getElementById('btn-box-count').innerText = s.box;
+        document.getElementById('btn-skin-count').innerText = s.tokens["自選造型"] || 0;
+        
+        renderHomeAssistant(); 
+        renderDepotSelectors(); 
+        renderDaily(); renderWeekly(); renderCustomTasks();
+        renderStore(); renderArchive(); renderRecords();
+        saveLocal();
+    }
+
+    function switchTab(tabId, btnElement) {
+        document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        document.getElementById(tabId).classList.add('active');
+        if(btnElement) btnElement.classList.add('active');
+        document.getElementById('ass-menu').style.display = 'none';
+    }
+
+    function renderHomeAssistant() {
+        let bgImg = document.getElementById('ass-bg-img');
+        let bgIcon = document.getElementById('ass-bg-icon');
+        let infoBox = document.getElementById('ass-info');
+        let voiceBox = document.getElementById('ass-voice');
+        let sel = document.getElementById('ass-select');
+        
+        let selHtml = '<option value="">請選擇...</option>';
+        let ownedOps = Object.keys(s.ops);
+        
+        if(ownedOps.length === 0) {
+            bgImg.style.display = "none";
+            bgIcon.style.display = "flex";
+            infoBox.innerHTML = "";
+            voiceBox.innerText = "「終端系統待命中，請先前往採購中心進行尋訪。」";
+        } else {
+            ownedOps.forEach(id => { selHtml += `<option value="${id}">${id} ${s.ops[id].skin ? '(換裝)' : ''}</option>`; });
+            
+            if(s.assistant && s.ops[s.assistant]) {
+                let isSkin = s.ops[s.assistant].skin;
+                bgIcon.style.display = "none";
+                bgImg.style.display = "block"; // 顯示你放的照片
+                
+                // 只有名字，沒有信賴值，字體縮小
+                infoBox.innerHTML = `
+                    <div style="font-size: 1.4rem; font-weight: bold; color: ${isSkin ? 'var(--ark-gold)' : 'white'}; letter-spacing: 2px;">${s.assistant}</div>
+                `;
+                
+                voiceBox.innerText = `「博士，我是 ${s.assistant}，羅德島各項系統運作正常，隨時準備執行您的指令。」`;
+            } else {
+                bgImg.style.display = "none";
+                bgIcon.style.display = "flex";
+                infoBox.innerHTML = "";
+                voiceBox.innerText = "「當前無指派助理，請點擊右方按鈕設定。」";
+            }
+        }
+        sel.innerHTML = selHtml;
+        if(s.assistant) sel.value = s.assistant;
+    }
+
+    function toggleAssistantMenu() {
+        let menu = document.getElementById('ass-menu');
+        menu.style.display = menu.style.display === 'none' ? 'block' : 'none';
+    }
+
+    function confirmAssistant() {
+        let id = document.getElementById('ass-select').value;
+        if(id) { s.assistant = id; log(`已將 ${id} 設為當前助理。`); updateUI(); toggleAssistantMenu(); }
+    }
+
+    function renderDepotSelectors() {
+        let sel = document.getElementById('skin-sel');
+        let selHtml = '<option value="">請選擇要換裝的幹員...</option>';
+        let ownedOps = Object.keys(s.ops);
+        ownedOps.forEach(id => { if(!s.ops[id].skin) { selHtml += `<option value="${id}">${id}</option>`; } });
+        sel.innerHTML = selHtml;
+    }
+
+    function useSkin() {
+        let skinCount = s.tokens["自選造型"] || 0;
+        if(skinCount <= 0) { alert("你沒有自選造型卷！請至採購中心購買。"); return; }
+        let id = document.getElementById('skin-sel').value;
+        if(!id) { alert("請先選擇一名尚未換裝的幹員！"); return; }
+        s.tokens["自選造型"]--; s.ops[id].skin = true;
+        log(`已為幹員 ${id} 換上專屬造型！`); alert(`成功為 ${id} 解鎖專屬造型！`); updateUI();
+    }
+
+    function openBox() {
+        if(s.box <= 0) { alert("物資箱不足！"); return; }
+        s.box--;
+        let hasLaterano = s.relics.includes('c_later'); 
+        let roll = Math.random() * (hasLaterano ? 120 : 100); 
+        let msg = "";
+        if(roll > 95) {
+            let availableRelics = DB_COLLECTS.filter(r => !s.relics.includes(r.id));
+            if(availableRelics.length > 0) {
+                let r = availableRelics[Math.floor(Math.random() * availableRelics.length)];
+                s.relics.push(r.id); msg = `✨ 驚喜發現！獲得藏品：【${r.n}】`;
+            } else { s.cert += 50; msg = `📦 獲得大量憑證 🎫x50`; }
+        } else if (roll > 70) { s.pull += 1; msg = `📦 獲得 尋訪憑證 🎟️x1`; } 
+        else if (roll > 40) {
+            let gift = DB_STORE[Math.floor(Math.random()*4)+2].id; 
+            s.tokens[gift] = (s.tokens[gift]||0) + 1; msg = `📦 獲得 ${gift} x1`;
+        } else { s.oru += 300; msg = `📦 獲得 合成玉 💎x300`; }
+        log(msg); updateUI(); alert(msg);
+    }
+
+    function renderDaily() {
+        let html = "";
+        D_TASKS.forEach(t => {
+            let chk = s.dStatus[t.id] ? "checked" : "";
+            html += `<div class="task-item"><label><input type="checkbox" ${chk} onchange="toggleDaily('${t.id}', ${t.w}, this.checked)"> ${t.n}</label><span class="progress-tag">⚡️${t.w}</span></div>`;
+        });
+        document.getElementById('daily-list').innerHTML = html;
+        document.getElementById('daily-total').innerText = `⚡️ ${s.dExp} / 13`;
+
+        const rew = ["100💎+5🎫", "100💎+1📦", "150💎", "15🎫", "2📦", "另給2📦"];
+        const req = [2, 4, 6, 8, 10, 13]; let rHtml = "";
+        req.forEach((r, i) => {
+            let state = s.dClaim[i] ? "claimed" : (s.dExp >= r ? "achieved" : "");
+            rHtml += `<div class="reward-node ${state}" onclick="claimDaily(${i}, ${r})">${r}⚡️<br>${rew[i]}</div>`;
+        });
+        document.getElementById('daily-rewards').innerHTML = rHtml;
+    }
+
+    function toggleDaily(id, w, isChecked) {
+        s.dStatus[id] = isChecked; s.dExp += isChecked ? w : -w;
+        const dailyToWeekly = { "d1":"w1", "d2":"w2", "d4":"w4", "d5":"w5", "d6":"w3", "d8":"w7" };
+        let wId = dailyToWeekly[id];
+        if(wId) {
+            let wTask = W_TASKS.find(t => t.id === wId);
+            if(!s.wProg[wId]) s.wProg[wId] = 0;
+            let old = s.wProg[wId];
+            s.wProg[wId] += isChecked ? 1 : -1;
+            if(s.wProg[wId] < 0) s.wProg[wId] = 0;
+            if(s.wProg[wId] > wTask.max) s.wProg[wId] = wTask.max;
+            if(s.wProg[wId] === wTask.max && old !== wTask.max) s.wExp += 2;
+            else if(old === wTask.max && s.wProg[wId] < wTask.max) s.wExp -= 2;
+        }
+        updateUI();
+    }
+
+    function claimDaily(idx, req) {
+        if(s.dExp >= req && s.dClaim[idx] === 0) {
+            s.dClaim[idx] = 1; s.stats.tasksCompleted++;
+            if(idx===0){ s.oru+=100; s.cert+=5; } else if(idx===1){ s.oru+=100; s.box+=1; } else if(idx===2){ s.oru+=150; } else if(idx===3){ s.cert+=15; } 
+            else if(idx===4){ s.box+=2; if(s.relics.includes('c_black')) { s.oru+=50; log("【黑鋼護目鏡】觸發：額外獲得 50💎"); } } 
+            else if(idx===5){ s.box+=2; if(!s.unlockedMedals.includes('m_day')) s.unlockedMedals.push('m_day'); }
+            log(`領取每日任務 ${req}⚡️ 獎勵！`); updateUI();
+        }
+    }
+
+    function renderWeekly() {
+        let html = ""; const linkedW = ["w1", "w2", "w3", "w4", "w5", "w7"];
+        W_TASKS.forEach(t => {
+            let prog = s.wProg[t.id] || 0;
+            html += `<div class="task-item" style="flex-direction:column; align-items:flex-start;"><div style="display:flex; justify-content:space-between; width:100%;"><span>${t.n} [${prog}/${t.max}]</span><span class="progress-tag">⚡️2</span></div><div style="margin-top:5px;">`;
+            let isLinked = linkedW.includes(t.id);
+            for(let i=0; i<t.max; i++) { html += `<input type="checkbox" ${i < prog ? "checked" : ""} ${isLinked ? "disabled" : ""} onchange="toggleWeekly('${t.id}', ${t.max}, this.checked)" style="transform: scale(1.2); margin-right:8px;">`; }
+            html += `</div></div>`;
+        });
+        document.getElementById('weekly-list').innerHTML = html;
+        document.getElementById('weekly-total').innerText = `⚡️ ${s.wExp} / 14`;
+
+        const rew = ["200💎+10🎫", "200💎+2📦", "300💎", "20🎫", "3📦", "400💎", "1🎟️"];
+        const req = [2, 4, 6, 8, 10, 12, 14]; let rHtml = "";
+        req.forEach((r, i) => {
+            let state = s.wClaim[i] ? "claimed" : (s.wExp >= r ? "achieved" : "");
+            rHtml += `<div class="reward-node ${state}" onclick="claimWeekly(${i}, ${r})">${r}⚡️<br>${rew[i]}</div>`;
+        });
+        document.getElementById('weekly-rewards').innerHTML = rHtml;
+    }
+
+    function toggleWeekly(id, max, isChecked) {
+        if(!s.wProg[id]) s.wProg[id] = 0;
+        let old = s.wProg[id]; s.wProg[id] += isChecked ? 1 : -1;
+        if(s.wProg[id] === max) s.wExp += 2; else if(old === max) s.wExp -= 2; updateUI();
+    }
+
+    function claimWeekly(idx, req) {
+        if(s.wExp >= req && s.wClaim[idx] === 0) {
+            s.wClaim[idx] = 1; s.stats.tasksCompleted++;
+            if(idx===0){ s.oru+=200; s.cert+=10; } else if(idx===1){ s.oru+=200; s.box+=2; } else if(idx===2){ s.oru+=300; } else if(idx===3){ s.cert+=20; } else if(idx===4){ s.box+=3; } else if(idx===5){ s.oru+=400; } 
+            else if(idx===6){ s.pull+=1; if(!s.unlockedMedals.includes('m_week')) s.unlockedMedals.push('m_week'); if(s.relics.includes('c_fiam')) { s.pull+=1; log("【未送出的銃】觸發：全勤補發尋訪憑證 🎟️x1"); } }
+            log(`領取每週任務 ${req}⚡️ 獎勵！`); updateUI();
+        }
+    }
+
+    function addSpecialTask() {
+    let name = document.getElementById('sp-name').value;
+    let amt = parseInt(document.getElementById('sp-amt').value);
+    
+    // 讀取剛剛新增的時限輸入框 (小時)
+    let hoursStr = document.getElementById('sp-hours').value;
+    let hours = parseFloat(hoursStr);
+    // 計算死線時間戳記：現在時間 + 小時數轉換成毫秒
+    let deadline = (!isNaN(hours) && hours > 0) ? Date.now() + hours * 3600 * 1000 : null;
+
+    if(!name || isNaN(amt)) return;
+
+    // 修復：真正的隨機陣營系統
+    const FACTIONS = ["企鵝物流", "喀蘭貿易", "黑鋼國際", "萊茵生命", "龍門近衛局", "拉特蘭公證所", "雷姆必拓", "哥倫比亞"];
+    let randomClient = FACTIONS[Math.floor(Math.random() * FACTIONS.length)];
+
+    s.customTasks.push({ 
+        id: Date.now(), 
+        type: "special",
+        origName: name, 
+        fluffName: "【外包委託】 " + name, 
+        diff: document.getElementById('sp-diff').value, 
+        client: randomClient, // 成功套用隨機陣營！
+        rType: document.getElementById('sp-rtype').value, 
+        rAmt: amt,
+        deadline: deadline // 記錄任務死線
+    });
+
+    // 清空輸入框
+    document.getElementById('sp-name').value = "";
+    document.getElementById('sp-amt').value = "";
+    document.getElementById('sp-hours').value = ""; // 清空時限
+    updateUI();
+}
+
+
+    function addMainTask() {
+        let name = document.getElementById('mn-name').value; let amt = parseInt(document.getElementById('mn-amt').value);
+        if(!name || isNaN(amt)) return;
+        s.customTasks.push({ id: Date.now(), type: "main", origName: name, fluffName: "【核心行動】"+name, diff: document.getElementById('mn-diff').value, client: "羅德島", rType: document.getElementById('mn-rtype').value, rAmt: amt });
+        document.getElementById('mn-name').value = ""; document.getElementById('mn-amt').value = ""; updateUI();
+    }
+
+    function renderCustomTasks() {
+    let spHtml = ""; 
+    let mnHtml = "";
+    let now = Date.now();
+
+    // 1. 自動清除超時任務
+    s.customTasks = s.customTasks.filter(t => {
+        if (t.deadline && t.deadline <= now) return false; // 過期了，直接拋棄
+        return true; 
+    });
+
+    // 2. 排序邏輯：有時限的優先(越急越上面)，沒時限的放後面(越新越上面)
+    let timedTasks = s.customTasks.filter(t => t.deadline).sort((a, b) => a.deadline - b.deadline);
+    let untimedTasks = s.customTasks.filter(t => !t.deadline).sort((a, b) => b.id - a.id);
+    let sortedTasks = [...timedTasks, ...untimedTasks];
+
+    // 3. 繪製任務卡片
+    sortedTasks.forEach(t => {
+        let icon = t.rType === "oru" ? "💎" : (t.rType === "pull" ? "🎟️" : "📦");
+        let c = t.type === "main" ? "main" : "special"; 
+        let color = t.type === "main" ? "var(--ark-blue)" : "#4caf50";
+        
+        // 處理倒數計時文字
+        let timeText = "";
+        if (t.deadline) {
+            let remainHours = ((t.deadline - now) / 3600000).toFixed(1);
+            timeText = `<span style="color:#ff5252; font-size:0.8em; margin-left:8px;">⏳剩餘 ${remainHours}h</span>`;
+        }
+
+        // 加入三個按鈕的排版 (達成、編輯、刪除)
+        let actionBtns = `
+            <div style="display:flex; gap:5px; margin-top:8px;">
+                <button class="ct-btn" style="flex:3;" onclick="completeCustomTask(${t.id}, '${t.rType}', ${t.rAmt}, '${t.diff}')">確認達成</button>
+                <button class="ct-btn" style="flex:1; background:#666;" onclick="editTask(${t.id})">📝</button>
+                <button class="ct-btn" style="flex:1; background:#a33;" onclick="deleteTask(${t.id})">🗑️</button>
+            </div>
+        `;
+
+        let card = `<div class="custom-task-card ${c}">
+            <div class="ct-header">
+                <span>委託方：${t.client}${timeText}</span>
+                <span style="color:${color}; font-weight:bold;">危險等級：${t.diff}</span>
+            </div>
+            <div class="ct-title">${t.fluffName}</div>
+            <div class="ct-reward">預期報酬：${t.rAmt} ${icon}</div>
+            ${actionBtns}
+        </div>`;
+
+        if(t.type === "main") mnHtml += card; 
+        else spHtml += card;
+    });
+
+    document.getElementById('special-task-container').innerHTML = spHtml;
+    document.getElementById('main-task-container').innerHTML = mnHtml;
+}
+window.editTask = function(id) {
+    let taskIndex = s.customTasks.findIndex(t => t.id === id);
+    if (taskIndex === -1) return;
+    let task = s.customTasks[taskIndex];
+
+    // 第一步：修改名稱
+    let newName = prompt("【PRTS 編輯 1/5】\n請輸入新的任務名稱：", task.origName);
+    if (newName === null) return; 
+
+    // 第二步：修改危險等級
+    let newDiff = prompt("【PRTS 編輯 2/5】\n請輸入新的危險等級 (例如：S, A, B, C)：", task.diff);
+    if (newDiff === null) return;
+
+    // 第三步：修改報酬種類
+    let newRType = prompt("【PRTS 編輯 3/5】\n請輸入新的報酬種類代號\n(oru = 源石/合成玉, pull = 尋訪憑證, box = 物資箱)：", task.rType);
+    if (newRType === null) return;
+    
+    // 檢查代號是否正確
+    if (!["oru", "pull", "box"].includes(newRType.trim())) {
+        alert("【系統警告】未知的報酬代號！請輸入 oru, pull 或 box。修改程序已終止。");
+        return;
+    }
+
+    // 第四步：修改報酬數量
+    let newAmtStr = prompt("【PRTS 編輯 4/5】\n請輸入新的報酬數量：", task.rAmt);
+    if (newAmtStr === null) return; 
+    let newAmt = parseInt(newAmtStr);
+
+    // 第五步：修改時限 (系統自動判斷，僅限特勤任務)
+    let newDeadline = task.deadline; 
+    if (task.type === "special") {
+        // 計算目前還剩幾小時，方便博士參考
+        let currentRemain = task.deadline ? ((task.deadline - Date.now()) / 3600000).toFixed(1) : "";
+        let msg = `【PRTS 編輯 5/5】\n請輸入新的任務時限 (從"現在"起算的小時數)。\n目前剩餘約 ${currentRemain ? currentRemain : "無限制"} 小時。\n\n(輸入 0 可永久取消時限；直接按確定或留空則維持原狀)：`;
+        
+        let hoursStr = prompt(msg, currentRemain);
+        if (hoursStr === null) return; // 按了取消直接終止
+        
+        if (hoursStr.trim() !== "") {
+            let hours = parseFloat(hoursStr);
+            if (!isNaN(hours)) {
+                if (hours <= 0) {
+                    newDeadline = null; // 拔除死線
+                } else {
+                    newDeadline = Date.now() + hours * 3600 * 1000; // 重新設定死線
+                }
+            }
+        }
+    }
+
+    // 確認輸入無誤後，一次性覆寫所有資料
+    if (newName.trim() !== "" && !isNaN(newAmt)) {
+        task.origName = newName.trim();
+        let prefix = task.type === "main" ? "【核心行動】 " : "【外包委託】 ";
+        task.fluffName = prefix + task.origName;
+        task.diff = newDiff.trim();
+        task.rType = newRType.trim();
+        task.rAmt = newAmt;
+        
+        // 只有特勤任務會更新死線
+        if (task.type === "special") {
+            task.deadline = newDeadline; 
+        }
+        
+        updateUI(); 
+        renderCustomTasks(); // 強制刷新畫面
+    } else {
+        alert("【系統提示】輸入資料無效，任務維持原狀。");
+    }
+}
+
+
+
+window.deleteTask = function(id) {
+    if (confirm("【警告】\n確定要永久刪除此任務嗎？此操作無法復原。")) {
+        s.customTasks = s.customTasks.filter(t => t.id !== id);
+        updateUI(); 
+        renderCustomTasks(); // 強制刷新畫面
+    }
+}
+           
+    function completeCustomTask(id, rType, rAmt, diff) {
+        if(rType === "oru") s.oru += rAmt; if(rType === "pull") s.pull += rAmt; if(rType === "box") s.box += rAmt;
+        s.stats.tasksCompleted++; if(diff === "S" || diff === "SS" || diff === "SSS") s.stats.sRankTasks++; 
+        s.customTasks = s.customTasks.filter(t => t.id !== id);
+        log(`任務達成，獲取 ${rAmt} 報酬。`); updateUI();
+    }
+
+    function renderStore() {
+        let html = ""; let hasDiscount = s.relics.includes('c_penguin');
+        document.getElementById('shop-discount-tag').style.display = hasDiscount ? "inline" : "none";
+        
+        DB_STORE.forEach(item => {
+            let finalPrice = hasDiscount ? Math.round(item.price * 0.9) : item.price; 
+            let holdingTxt = item.id === "尋訪憑證" ? "" : `<div style="font-size:0.8rem; color:#aaa; margin-bottom:5px;">持有: ${s.tokens[item.id]||0}</div>`;
+            
+            html += `<div class="card">
+                <div style="font-size:1.8rem;">${item.icon}</div>
+                <div style="font-weight:bold; margin:5px 0;">${item.n}</div>
+                ${holdingTxt}
+                <button onclick="buyItem('${item.id}', ${finalPrice})" style="width:100%; ${hasDiscount?'background:#ff9800':''}; margin-top: auto;">🎫${finalPrice}</button>
+            </div>`;
+        });
+        document.getElementById('store-grid').innerHTML = html;
+    }
+
+    function buyItem(id, price) {
+        if(s.cert >= price) {
+            s.cert -= price; s.stats.shopBuys++;
+            if (id === "尋訪憑證") { s.pull++; log(`成功購買 尋訪憑證 x1！`); } 
+            else { s.tokens[id] = (s.tokens[id] || 0) + 1; log(`成功購買 ${id}！`); }
+            updateUI();
+        } else { alert("憑證不足！"); }
+    }
+
+    function gachaRoll(times) {
+        let costOru = times * 600; let costPull = times;
+        if (s.pull >= costPull) { s.pull -= costPull; }
+        else if (s.oru >= costOru) { s.oru -= costOru; }
+        else { alert("資源不足！"); return; }
+
+        let resultHtml = ""; let newSkinCount = 0; let refundOru = 0;
+
+        for(let i=0; i<times; i++) {
+            let randOp = DB_OPS[Math.floor(Math.random() * DB_OPS.length)];
+            let isDupe = s.ops[randOp.id];
+            
+            if(isDupe) { s.cert += 10; resultHtml += `<div style="margin:5px 0;">${randOp.n} <span style="color:#888; font-size:0.8rem;">(🎫+10)</span></div>`; } 
+            else { s.ops[randOp.id] = { trust: 0, skin: false }; resultHtml += `<div style="margin:5px 0; color:var(--ark-yellow);">★ ${randOp.n} (新加入) ★</div>`; newSkinCount++; }
+            if(s.relics.includes('c_syra')) refundOru += 20; 
+        }
+
+        if(refundOru > 0) { s.oru += refundOru; resultHtml += `<hr><div style="font-size:0.8rem; color:#aaa;">【千層酥空盒】返還 💎${refundOru}</div>`; }
+        if(times === 10 && newSkinCount >= 2) { if(!s.unlockedMedals.includes('m_gacha')) s.unlockedMedals.push('m_gacha'); }
+
+        document.getElementById('gacha-result-name').innerHTML = resultHtml;
+        document.getElementById('gacha-overlay').style.display = 'flex';
+        updateUI();
+    }
+
+    function renderArchive() {
+        let html = "";
+        DB_OPS.forEach(op => {
+            let isOwned = s.ops[op.id] !== undefined;
+            if(isOwned) {
+                let hasSkin = s.ops[op.id].skin;
+                html += `<div class="card" onclick="openOpModal('${op.id}')" style="border-color:${hasSkin ? 'var(--ark-gold)' : 'var(--ark-yellow)'}; position:relative;">
+                    ${hasSkin ? '<div style="position:absolute; top:2px; right:5px; font-size:0.8rem;">✨</div>' : ''}
+                    <div style="color:${hasSkin ? 'var(--ark-gold)' : 'white'}; font-weight:bold;">${op.n}</div>
+                    <div style="font-size:0.8rem; color:#4caf50; margin-top:5px;">信賴: ${s.ops[op.id].trust}%</div>
+                </div>`;
+            } else { html += `<div class="card" style="opacity:0.3;"><div style="color:#888;">???</div></div>`; }
+        });
+        document.getElementById('op-grid').innerHTML = html;
+    }
+
+    function openOpModal(id) {
+        currentOpId = id; let opData = DB_OPS.find(o => o.id === id); let opState = s.ops[id];
+        document.getElementById('m-op-name').innerText = opData.n + (opState.skin ? " (已換裝)" : ""); 
+        document.getElementById('m-op-trust').innerText = opState.trust;
+        document.getElementById('m-op-fav-hint').innerText = `* 偏好禮物：${opData.fav}`;
+        
+        let giftHtml = `<option value="">請選擇禮物...</option>`;
+        ["拉特蘭甜點","敘拉古巧克力","黑鋼保養套件","烏薩斯紅茶"].forEach(g => { if(s.tokens[g] > 0) giftHtml += `<option value="${g}">${g} (持有:${s.tokens[g]})</option>`; });
+        document.getElementById('m-gift-sel').innerHTML = giftHtml;
+        document.getElementById('overlay').style.display = 'block'; document.getElementById('op-modal').style.display = 'block';
+    }
+
+    function giveGift() {
+        let giftId = document.getElementById('m-gift-sel').value; if(!giftId) return;
+        let opData = DB_OPS.find(o => o.id === currentOpId);
+        s.tokens[giftId]--;
+        let trustGain = (giftId === opData.fav) ? 50 : 20;
+        if(s.relics.includes('c_ursus')) trustGain += 5; 
+        s.ops[currentOpId].trust += trustGain; 
+        if(s.ops[currentOpId].trust >= 200) { s.ops[currentOpId].trust = 200; if(!s.unlockedMedals.includes('m_trust')) s.unlockedMedals.push('m_trust'); }
+        log(`贈送 ${giftId}，信賴度提升 ${trustGain}%！`); updateUI(); openOpModal(currentOpId);
+    }
+
+    function closeModal() { document.getElementById('overlay').style.display = 'none'; document.getElementById('op-modal').style.display = 'none'; }
+
+    function renderRecords() {
+        let mHtml = "";
+        DB_MEDALS.forEach(m => {
+            let unlocked = s.unlockedMedals.includes(m.id);
+            mHtml += `<div class="card" style="opacity:${unlocked?1:0.3}; border-color:${unlocked?'var(--ark-gold)':'#444'}">
+                <div class="medal-icon">${m.icon}</div>
+                <div style="font-weight:bold;font-size:0.8rem;color:${unlocked?'#fff':'#888'}">${m.n}</div>
+                <div style="font-size:0.65rem;color:#888;margin-top:4px;">${m.desc}</div>
+            </div>`;
+        });
+        document.getElementById('medal-grid').innerHTML = mHtml;
+
+        let cHtml = "";
+        DB_COLLECTS.forEach(c => {
+            let unlocked = s.relics.includes(c.id);
+            cHtml += `<div class="card" style="opacity:${unlocked?1:0.3}; border-color:${unlocked?'#fff':'#444'}">
+                <div class="collect-icon">${c.icon}</div>
+                <div style="font-weight:bold;font-size:0.8rem;">${c.n}</div>
+                <div style="font-size:0.65rem;color:#888;margin-top:4px;">${c.desc}</div>
+            </div>`;
+        });
+        document.getElementById('collect-grid').innerHTML = cHtml;
+    }
+
+    function checkMedals() {
+        if(s.stats.tasksCompleted >= 10 && !s.unlockedMedals.includes('m_task10')) s.unlockedMedals.push('m_task10');
+        if(s.stats.tasksCompleted >= 50 && !s.unlockedMedals.includes('m_task50')) s.unlockedMedals.push('m_task50');
+        if(s.stats.tasksCompleted >= 100 && !s.unlockedMedals.includes('m_task100')) s.unlockedMedals.push('m_task100');
+        if(s.oru >= 10000 && !s.unlockedMedals.includes('m_rich')) s.unlockedMedals.push('m_rich');
+        if(s.stats.shopBuys >= 10 && !s.unlockedMedals.includes('m_shop')) s.unlockedMedals.push('m_shop');
+        if(s.stats.sRankTasks >= 5 && !s.unlockedMedals.includes('m_srank')) s.unlockedMedals.push('m_srank');
+    }
+
+    loadLocal();
+    setInterval(checkAutoReset, 60000);
+</script>
+</body>
+</html>
