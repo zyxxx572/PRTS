@@ -903,7 +903,7 @@ window.deleteTask = function(id) {
         let giftId = document.getElementById('m-gift-sel').value; if(!giftId) return;
         let opData = DB_OPS.find(o => o.id === currentOpId);
         s.tokens[giftId]--;
-        let trustGain = (giftId === opData.fav) ? 50 : 20;
+        let trustGain = (giftId === opData.fav) ? 10 : 5;
         if(s.relics.includes('c_ursus')) trustGain += 5; 
         s.ops[currentOpId].trust += trustGain; 
         if(s.ops[currentOpId].trust >= 200) { s.ops[currentOpId].trust = 200; if(!s.unlockedMedals.includes('m_trust')) s.unlockedMedals.push('m_trust'); }
@@ -946,6 +946,7 @@ window.deleteTask = function(id) {
     }
 
     loadLocal();
+    for(let k in s.ops) s.ops[k].trust = 0; saveLocal();
     setInterval(checkAutoReset, 60000);
 </script>
 </body>
