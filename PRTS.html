@@ -946,7 +946,6 @@ window.deleteTask = function(id) {
     }
 
     loadLocal();
-    for(let k in s.ops) s.ops[k].trust = 0; saveLocal();
     setInterval(checkAutoReset, 60000);
 </script>
 </body>
