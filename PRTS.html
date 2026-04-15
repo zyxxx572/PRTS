@@ -204,8 +204,34 @@
                 <h2 style="color: #4caf50;">特勤任務</h2>
                 <div id="special-task-container"></div>
             </div>
-
-            <div class="panel" style="border-left-color: var(--ark-blue);">
+            <div class="panel" style="border-left-color: var(--ark-gold); margin-top: 15px;">
+                <h2 style="color: var(--ark-gold);">【吾導先路】</h2>
+                <div style="display:flex; flex-direction:column; gap:8px;">
+                    <div style="display:flex; gap:8px;">
+                        <select id="exam-subject" style="flex:1;">
+                            <option value="國文">國文</option>
+                            <option value="英文">英文</option>
+                            <option value="數學">數學</option>
+                            <option value="自然">自然</option>
+                            <option value="社會">社會</option>
+                        </select>
+                        <div style="display:flex; align-items:center; gap:5px; flex:1; font-size:0.9rem; color:#aaa;">
+                            重複 <input type="number" id="exam-repeat" value="1" min="1" style="width:100%; box-sizing:border-box;"> 次
+                        </div>
+                    </div>
+                    <input type="text" id="exam-name" placeholder="輸入任務" style="width:100%; box-sizing:border-box;">
+                    <div style="display:flex; gap:8px;">
+                        <input type="number" id="exam-amt" placeholder="單次獎勵數量" style="flex:2;">
+                        <select id="exam-rtype" style="flex:1;">
+                            <option value="oru">💎</option>
+                            <option value="pull">🎟️</option>
+                            <option value="box">📦</option>
+                        </select>
+                        <button onclick="addExamTask()" style="flex:2; background:var(--ark-gold); color:#000; font-weight:bold;">發布導航</button>
+                    </div>
+                </div>
+                <div id="exam-task-container" style="margin-top: 15px;"></div>
+            </div>
                 <h2 style="color: var(--ark-blue);">發布主線任務</h2>
                 <div style="display:flex; flex-direction:column; gap:8px;">
                     <div style="display:flex; gap:8px;">
@@ -389,7 +415,7 @@
     let s = {
         oru: 100, cert: 60, pull: 0, box: 0,
         dExp: 0, wExp: 0, dStatus: {}, wProg: {}, dClaim: [0,0,0,0,0,0], wClaim: [0,0,0,0,0,0,0],
-        customTasks: [], lastDailyDate: "", lastWeeklyMonday: "",
+        customTasks: [],examTasks: [], lastDailyDate: "", lastWeeklyMonday: "",
         ops: {}, tokens: {},
         relics: [], unlockedMedals: [],
         stats: { tasksCompleted: 0, sRankTasks: 0, shopBuys: 0 },
@@ -452,7 +478,7 @@
         
         renderHomeAssistant(); 
         renderDepotSelectors(); 
-        renderDaily(); renderWeekly(); renderCustomTasks();
+        renderDaily(); renderWeekly(); renderCustomTasks();renderExamTasks();
         renderStore(); renderArchive(); renderRecords();
         saveLocal();
     }
@@ -947,6 +973,96 @@ window.deleteTask = function(id) {
 
     loadLocal();
     setInterval(checkAutoReset, 60000);
+    // ==========================================
+    // 【吾導先路】專屬運作邏輯
+    // ==========================================
+    
+    function addExamTask() {
+        let subj = document.getElementById('exam-subject').value;
+        let name = document.getElementById('exam-name').value;
+        let repeat = parseInt(document.getElementById('exam-repeat').value) || 1;
+        let amt = parseInt(document.getElementById('exam-amt').value) || 0;
+        let rtype = document.getElementById('exam-rtype').value;
+
+        if (name.trim() === "" || amt <= 0) { 
+            alert("博士，請確認任務與獎勵數量已正確輸入。"); 
+            return; 
+        }
+
+        if (!s.examTasks) s.examTasks = [];
+
+        s.examTasks.push({
+            subject: subj,
+            text: name,
+            current: 0,
+            max: repeat,
+            amt: amt,
+            rtype: rtype
+        });
+
+        document.getElementById('exam-name').value = "";
+        document.getElementById('exam-repeat').value = 1;
+        document.getElementById('exam-amt').value = "";
+        
+        saveLocal();
+        updateUI();
+        log(`拉特蘭公證所已記錄新任務：${subj} - ${name}`);
+    }
+
+    function executeExamTask(index) {
+        let t = s.examTasks[index];
+        if (t.current < t.max) {
+            t.current++;
+
+            if(t.rtype === "oru") s.oru += t.amt;
+            else if(t.rtype === "pull") s.pull += t.amt;
+            else if(t.rtype === "box") s.box += t.amt;
+
+            s.stats.tasksCompleted++; 
+
+            let rIcon = t.rtype === 'oru' ? '💎' : t.rtype === 'pull' ? '🎟️' : '📦';
+            log(`【任務進度】完成 1 次「${t.text}」，尋路獎勵：${t.amt} ${rIcon}`);
+            
+            saveLocal();
+            updateUI(); 
+        }
+    }
+
+    function deleteExamTask(index) {
+        if(confirm("確定要取消這項任務嗎？紀錄將會被清除。")) {
+            s.examTasks.splice(index, 1);
+            saveLocal();
+            updateUI();
+        }
+    }
+
+    function renderExamTasks() {
+        let container = document.getElementById('exam-task-container');
+        if(!container || !s.examTasks) return;
+
+        container.innerHTML = s.examTasks.map((t, i) => {
+            let isDone = t.current >= t.max;
+            let rIcon = t.rtype === 'oru' ? '💎' : t.rtype === 'pull' ? '🎟️' : '📦';
+            
+            return `
+            <div class="custom-task-card" style="border-left: 5px solid ${isDone ? '#4caf50' : 'var(--ark-gold)'}; background: ${isDone ? '#111' : '#1e1e1e'};">
+                <div class="ct-header">
+                    <span style="background: #444; color: #fff; padding: 2px 6px; border-radius: 3px; font-weight: bold;">${t.subject}</span>
+                    <span>進度: ${t.current} / ${t.max}</span>
+                </div>
+                <div class="ct-title" style="text-decoration: ${isDone ? 'line-through' : 'none'}; color: ${isDone ? '#666' : '#fff'};">
+                    ${t.text}
+                </div>
+                <div class="ct-reward" style="color: ${isDone ? '#555' : 'var(--ark-gold)'};">單次結算: ${t.amt} ${rIcon}</div>
+                
+                <div style="display: flex; gap: 5px; margin-top: 10px;">
+                    ${!isDone ? `<button onclick="executeExamTask(${i})" style="flex: 1; background: var(--ark-gold); color: #000; font-weight: bold;">推進 1 次</button>` : `<button disabled style="flex: 1; background: #333;">導航完成</button>`}
+                    <button onclick="deleteExamTask(${i})" style="background: transparent; border: 1px solid var(--ark-gold); color: var(--ark-gold); padding: 0 10px;">刪除</button>
+                </div>
+            </div>
+            `;
+        }).join('');
+    }
 </script>
 </body>
 </html>
