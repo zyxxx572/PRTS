@@ -138,11 +138,12 @@
 
     <div class="tabs">
         <button class="tab-btn active" onclick="switchTab('tab-home', this)">主頁</button>
-        <button class="tab-btn" onclick="switchTab('tab-tasks', this)">作戰終端</button>
-        <button class="tab-btn" onclick="switchTab('tab-gacha', this)">採購中心</button>
+        <button class="tab-btn" onclick="switchTab('tab-tasks', this)">任務</button>
+        <button class="tab-btn" onclick="switchTab('tab-ark', this)">公共事務實錄</button>
+        <button class="tab-btn" onclick="switchTab('tab-gacha', this)">憑證交易所</button>
         <button class="tab-btn" onclick="switchTab('tab-depot', this)">倉庫</button>
-        <button class="tab-btn" onclick="switchTab('tab-archive', this)">幹員檔案</button>
-        <button class="tab-btn" onclick="switchTab('tab-records', this)">榮譽紀錄</button>
+        <button class="tab-btn" onclick="switchTab('tab-archive', this)">幹員</button>
+        <button class="tab-btn" onclick="switchTab('tab-records', this)">光榮之路</button>
     </div>
 
     <div class="container">
@@ -204,34 +205,7 @@
                 <h2 style="color: #4caf50;">特勤任務</h2>
                 <div id="special-task-container"></div>
             </div>
-            <div class="panel" style="border-left-color: #fff; margin-top: 15px;">
-                <h2 style="color: #fff;">吾導先路</h2>
-                <div style="display:flex; flex-direction:column; gap:8px;">
-                    <div style="display:flex; gap:8px;">
-                        <select id="exam-subject" style="flex:1;">
-                            <option value="國文">國文</option>
-                            <option value="英文">英文</option>
-                            <option value="數學">數學</option>
-                            <option value="自然">自然</option>
-                            <option value="社會">社會</option>
-                        </select>
-                        <div style="display:flex; align-items:center; gap:5px; flex:1; font-size:0.9rem; color:#aaa;">
-                            重複 <input type="number" id="exam-repeat" value="1" min="1" style="width:100%; box-sizing:border-box;"> 次
-                        </div>
-                    </div>
-                    <input type="text" id="exam-name" placeholder="輸入任務名稱..." style="width:100%; box-sizing:border-box;">
-                    <div style="display:flex; gap:8px;">
-                        <input type="number" id="exam-amt" placeholder="單次獎勵數量" style="flex:2;">
-                        <select id="exam-rtype" style="flex:1;">
-                            <option value="oru">💎</option>
-                            <option value="pull">🎟️</option>
-                            <option value="box">📦</option>
-                        </select>
-                        <button onclick="addExamTask()" style="flex:2; background:#fff; color:#000; font-weight:bold;">發布</button>
-                    </div>
-                </div>
-                <div id="exam-task-container" style="margin-top: 15px;"></div>
-            </div>
+
             <div class="panel" style="border-left-color: var(--ark-blue);">
                 <h2 style="color: var(--ark-blue);">發布主線任務</h2>
                 <div style="display:flex; flex-direction:column; gap:8px;">
@@ -350,7 +324,67 @@
         <div id="m-op-fav-hint" style="font-size: 0.8rem; color: #aaa; margin-top: 5px;"></div>
         <button class="dark" onclick="closeModal()" style="width: 100%; margin-top: 15px;">關閉</button>
     </div>
+    
+<div id="tab-ark" class="tab-content" style="display: none;">
 
+    <div class="panel" style="border-left-color: #fff; margin-top: 15px;">
+                <h2 style="color: #fff;">吾導先路</h2>
+                <div style="display:flex; flex-direction:column; gap:8px;">
+                    <div style="display:flex; gap:8px;">
+                        <select id="exam-subject" style="flex:1;">
+                            <option value="國文">國文</option>
+                            <option value="英文">英文</option>
+                            <option value="數學">數學</option>
+                            <option value="自然">自然</option>
+                            <option value="社會">社會</option>
+                        </select>
+                        <div style="display:flex; align-items:center; gap:5px; flex:1; font-size:0.9rem; color:#aaa;">
+                            重複 <input type="number" id="exam-repeat" value="1" min="1" style="width:100%; box-sizing:border-box;"> 次
+                        </div>
+                    </div>
+                    <input type="text" id="exam-name" placeholder="輸入任務名稱..." style="width:100%; box-sizing:border-box;">
+                    <div style="display:flex; gap:8px;">
+                        <input type="number" id="exam-amt" placeholder="單次獎勵數量" style="flex:2;">
+                        <select id="exam-rtype" style="flex:1;">
+                            <option value="oru">💎</option>
+                            <option value="pull">🎟️</option>
+                            <option value="box">📦</option>
+                        </select>
+                        <button onclick="addExamTask()" style="flex:2; background:#fff; color:#000; font-weight:bold;">發布</button>
+                    </div>
+                </div>
+                <div id="exam-task-container" style="margin-top: 15px;"></div>
+            </div>
+        <div class="panel" style="border-left-color: #e91e63; margin-top: 15px;">
+            <h2 style="color: #e91e63;">空想花庭 <span>(備忘錄)</span></h2>
+            <div style="display:flex; gap:8px; margin-bottom: 10px;">
+                <input type="text" id="memo-input" placeholder="紀錄臨時想法..." style="flex:3; box-sizing:border-box;">
+                <button onclick="addMemo()" style="flex:1; background:#e91e63; color:#fff;">種下想法</button>
+            </div>
+            <div id="memo-list" style="display:flex; flex-direction:column; gap:5px;"></div>
+        </div>
+
+        <div class="panel" style="border-left-color: #ff9800; margin-top: 15px;">
+            <h2 style="color: #ff9800;">喧鬧法則 <span>(行事曆)</span></h2>
+            <div style="display:flex; gap:8px; margin-bottom: 10px;">
+                <input type="text" id="schedule-name" placeholder="事項名稱..." style="flex:2; box-sizing:border-box;">
+                <input type="date" id="schedule-date" style="flex:1; box-sizing:border-box;">
+                <button onclick="addSchedule()" style="flex:1; background:#ff9800; color:#fff;">新增排程</button>
+            </div>
+            <div id="schedule-list" style="display:flex; flex-direction:column; gap:5px;"></div>
+        </div>
+
+        <div class="panel" style="border-left-color: #9c27b0; margin-top: 15px;">
+            <h2 style="color: #9c27b0;">眾生行記 <span>(日記)</span></h2>
+            <div style="display:flex; flex-direction:column; gap:8px; margin-bottom: 10px;">
+                <textarea id="diary-input" placeholder="今天發生了什麼事..." rows="3" style="width:100%; box-sizing:border-box; resize:vertical;"></textarea>
+                <button onclick="addDiary()" style="background:#9c27b0; color:#fff; align-self:flex-end; padding: 5px 15px;">寫下紀錄</button>
+            </div>
+            <div id="diary-list" style="display:flex; flex-direction:column; gap:8px;"></div>
+        </div>
+
+    </div>
+    ```
 <script>
     const DB_OPS = [
         { id: "莫斯提馬", n: "莫斯提馬", fav: "拉特蘭甜點" },
@@ -1064,6 +1098,167 @@ window.deleteTask = function(id) {
             `;
         }).join('');
     }
+    // ==========================================
+// 終端紀錄 (Ark) 分頁專屬功能
+// ==========================================
+
+// --- 1. 空想花庭 (備忘錄) ---
+function addMemo() {
+    const input = document.getElementById('memo-input');
+    const text = input.value.trim();
+    if (!text) return;
+
+    let memos = JSON.parse(localStorage.getItem('arkMemos') || '[]');
+    memos.push(text);
+    localStorage.setItem('arkMemos', JSON.stringify(memos));
+    input.value = '';
+    renderMemos();
+}
+
+function deleteMemo(index) {
+    let memos = JSON.parse(localStorage.getItem('arkMemos') || '[]');
+    memos.splice(index, 1);
+    localStorage.setItem('arkMemos', JSON.stringify(memos));
+    renderMemos();
+}
+
+function renderMemos() {
+    const container = document.getElementById('memo-list');
+    let memos = JSON.parse(localStorage.getItem('arkMemos') || '[]');
+    container.innerHTML = '';
+    memos.forEach((memo, index) => {
+        container.innerHTML += `
+            <div style="display:flex; justify-content:space-between; background:#222; padding:8px; border-radius:4px; border-left: 3px solid #e91e63;">
+                <span style="color:#fff; word-break:break-all;">${memo}</span>
+                <button onclick="deleteMemo(${index})" style="background:transparent; color:#ff4c4c; border:none; cursor:pointer; font-weight:bold;">✖</button>
+            </div>
+        `;
+    });
+}
+
+// --- 2. 喧鬧法則 (行事曆 - 自動刪除與星期計算) ---
+function addSchedule() {
+    const nameInput = document.getElementById('schedule-name');
+    const dateInput = document.getElementById('schedule-date');
+    const name = nameInput.value.trim();
+    const date = dateInput.value;
+
+    if (!name || !date) {
+        alert("請輸入事項名稱與日期！");
+        return;
+    }
+
+    let schedules = JSON.parse(localStorage.getItem('arkSchedules') || '[]');
+    schedules.push({ name: name, date: date });
+    localStorage.setItem('arkSchedules', JSON.stringify(schedules));
+    
+    nameInput.value = '';
+    dateInput.value = '';
+    renderSchedules();
+}
+
+function deleteSchedule(index) {
+    let schedules = JSON.parse(localStorage.getItem('arkSchedules') || '[]');
+    schedules.splice(index, 1);
+    localStorage.setItem('arkSchedules', JSON.stringify(schedules));
+    renderSchedules();
+}
+
+function renderSchedules() {
+    const container = document.getElementById('schedule-list');
+    let schedules = JSON.parse(localStorage.getItem('arkSchedules') || '[]');
+    
+    // 取得今天的日期 (把時間歸零，只比較日期)
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    // 過濾掉過期的排程 (保留 日期 >= 今天的)
+    const validSchedules = schedules.filter(s => {
+        const sDate = new Date(s.date);
+        sDate.setHours(0, 0, 0, 0);
+        return sDate >= today;
+    });
+
+    // 如果發現有過期的被刪掉了，就更新紀錄
+    if (validSchedules.length !== schedules.length) {
+        schedules = validSchedules;
+        localStorage.setItem('arkSchedules', JSON.stringify(schedules));
+    }
+
+    // 將排程依照日期「由近到遠」排序
+    schedules.sort((a, b) => new Date(a.date) - new Date(b.date));
+
+    // 星期幾的轉換陣列
+    const weekdays = ['日', '一', '二', '三', '四', '五', '六'];
+
+    container.innerHTML = '';
+    schedules.forEach((s, index) => {
+        const itemDate = new Date(s.date);
+        const dayStr = weekdays[itemDate.getDay()];
+        
+        container.innerHTML += `
+            <div style="display:flex; justify-content:space-between; align-items:center; background:#222; padding:8px; border-radius:4px; border-left: 3px solid #ff9800;">
+                <div>
+                    <div style="color:#ff9800; font-size:0.85em; font-weight:bold; margin-bottom:3px;">${s.date} (星期${dayStr})</div>
+                    <div style="color:#fff;">${s.name}</div>
+                </div>
+                <button onclick="deleteSchedule(${index})" style="background:transparent; color:#ff4c4c; border:none; cursor:pointer; font-size:1.2em; font-weight:bold;">✖</button>
+            </div>
+        `;
+    });
+}
+
+// --- 3. 眾生行記 (日記) ---
+function addDiary() {
+    const input = document.getElementById('diary-input');
+    const text = input.value.trim();
+    if (!text) return;
+
+    let diaries = JSON.parse(localStorage.getItem('arkDiaries') || '[]');
+    
+    // 取得當下的詳細時間
+    const now = new Date();
+    const timeString = `${now.getFullYear()}/${(now.getMonth()+1).toString().padStart(2,'0')}/${now.getDate().toString().padStart(2,'0')} ${now.getHours().toString().padStart(2,'0')}:${now.getMinutes().toString().padStart(2,'0')}`;
+
+    // 把新日記加到最前面
+    diaries.unshift({ time: timeString, content: text });
+    localStorage.setItem('arkDiaries', JSON.stringify(diaries));
+    input.value = '';
+    renderDiaries();
+}
+
+function deleteDiary(index) {
+    let diaries = JSON.parse(localStorage.getItem('arkDiaries') || '[]');
+    diaries.splice(index, 1);
+    localStorage.setItem('arkDiaries', JSON.stringify(diaries));
+    renderDiaries();
+}
+
+function renderDiaries() {
+    const container = document.getElementById('diary-list');
+    let diaries = JSON.parse(localStorage.getItem('arkDiaries') || '[]');
+    container.innerHTML = '';
+    diaries.forEach((diary, index) => {
+        // 將換行符號轉換為 <br> 讓排版正常
+        const formattedContent = diary.content.replace(/\n/g, '<br>');
+        container.innerHTML += `
+            <div style="background:#222; padding:10px; border-radius:4px; border-left: 3px solid #9c27b0;">
+                <div style="display:flex; justify-content:space-between; border-bottom:1px solid #444; padding-bottom:5px; margin-bottom:5px;">
+                    <span style="color:#9c27b0; font-size:0.85em;">${diary.time}</span>
+                    <button onclick="deleteDiary(${index})" style="background:transparent; color:#ff4c4c; border:none; cursor:pointer; font-size:0.9em; font-weight:bold;">刪除</button>
+                </div>
+                <div style="color:#ccc; font-size:0.95em; line-height:1.4;">${formattedContent}</div>
+            </div>
+        `;
+    });
+}
+
+// --- 初始化載入資料 ---
+window.addEventListener('DOMContentLoaded', () => {
+    renderMemos();
+    renderSchedules();
+    renderDiaries();
+});
 </script>
 </body>
 </html>
