@@ -325,65 +325,72 @@
         <button class="dark" onclick="closeModal()" style="width: 100%; margin-top: 15px;">關閉</button>
     </div>
     
-<div id="tab-ark" class="tab-content" >
-
-    <div class="panel" style="border-left-color: #fff; margin-top: 15px;">
-                <h2 style="color: #fff;">吾導先路</h2>
-                <div style="display:flex; flex-direction:column; gap:8px;">
-                    <div style="display:flex; gap:8px;">
-                        <select id="exam-subject" style="flex:1;">
-                            <option value="國文">國文</option>
-                            <option value="英文">英文</option>
-                            <option value="數學">數學</option>
-                            <option value="自然">自然</option>
-                            <option value="社會">社會</option>
-                        </select>
-                        <div style="display:flex; align-items:center; gap:5px; flex:1; font-size:0.9rem; color:#aaa;">
-                            重複 <input type="number" id="exam-repeat" value="1" min="1" style="width:100%; box-sizing:border-box;"> 次
-                        </div>
-                    </div>
-                    <input type="text" id="exam-name" placeholder="輸入任務名稱..." style="width:100%; box-sizing:border-box;">
-                    <div style="display:flex; gap:8px;">
-                        <input type="number" id="exam-amt" placeholder="單次獎勵數量" style="flex:2;">
-                        <select id="exam-rtype" style="flex:1;">
-                            <option value="oru">💎</option>
-                            <option value="pull">🎟️</option>
-                            <option value="box">📦</option>
-                        </select>
-                        <button onclick="addExamTask()" style="flex:2; background:#fff; color:#000; font-weight:bold;">發布</button>
+    <div id="tab-ark" class="tab-content">
+        
+        <div class="panel" style="border-left-color: #fff; margin-top: 15px;">
+            <h2 style="color: #fff;">吾導先路</h2>
+            <div style="display:flex; flex-direction:column; gap:8px;">
+                <div style="display:flex; gap:8px;">
+                    <select id="exam-subject" style="flex:1; background:#333; color:#fff; border:1px solid #555; padding:5px;">
+                        <option value="國文">國文</option>
+                        <option value="英文">英文</option>
+                        <option value="數學">數學</option>
+                        <option value="自然">自然</option>
+                        <option value="社會">社會</option>
+                    </select>
+                    <div style="display:flex; align-items:center; gap:5px; flex:1; font-size:0.9rem; color:#aaa;">
+                        重複 <input type="number" id="exam-repeat" value="1" min="1" style="width:100%; box-sizing:border-box; background:#333; color:#fff; border:1px solid #555; padding:5px;"> 次
                     </div>
                 </div>
-                <div id="exam-task-container" style="margin-top: 15px;"></div>
+                <input type="text" id="exam-name" placeholder="輸入任務名稱..." style="width:100%; box-sizing:border-box; background:#333; color:#fff; border:1px solid #555; padding:5px;">
+                <div style="display:flex; gap:8px;">
+                    <input type="number" id="exam-amt" placeholder="單次獎勵數量" style="flex:2; background:#333; color:#fff; border:1px solid #555; padding:5px;">
+                    <select id="exam-rtype" style="flex:1; background:#333; color:#fff; border:1px solid #555; padding:5px;">
+                        <option value="oru">💎</option>
+                        <option value="pull">🎟️</option>
+                        <option value="box">📦</option>
+                    </select>
+                    <button onclick="addExamTask()" style="flex:2; background:#fff; color:#000; font-weight:bold; border:none; cursor:pointer;">發布</button>
+                </div>
             </div>
-        <div class="panel" style="border-left-color: #e91e63; margin-top: 15px;">
-            <h2 style="color: #e91e63;">空想花庭 <span>(備忘錄)</span></h2>
+            <div id="exam-task-container" style="margin-top: 15px;"></div>
+        </div>
+        <div class="panel" style="border-left-color: #eee; margin-top: 15px;">
+            <h2 style="color: #eee;">空想花庭 <span>(備忘錄)</span></h2>
             <div style="display:flex; gap:8px; margin-bottom: 10px;">
-                <input type="text" id="memo-input" placeholder="紀錄臨時想法..." style="flex:3; box-sizing:border-box;">
-                <button onclick="addMemo()" style="flex:1; background:#e91e63; color:#fff;">種下想法</button>
+                <input type="text" id="memo-input" placeholder="紀錄臨時想法..." style="flex:3; box-sizing:border-box; background:#333; color:#fff; border:1px solid #555; padding:5px;">
+                <button onclick="addMemo()" style="flex:1; background:#eee; color:#222; font-weight:bold; border:none; cursor:pointer;">種下想法</button>
             </div>
             <div id="memo-list" style="display:flex; flex-direction:column; gap:5px;"></div>
         </div>
 
-        <div class="panel" style="border-left-color: #ff9800; margin-top: 15px;">
-            <h2 style="color: #ff9800;">喧鬧法則 <span>(行事曆)</span></h2>
+        <div class="panel" style="border-left-color: #00C8FF; margin-top: 15px;">
+            <h2 style="color: #00C8FF;">喧鬧法則 <span>(行事曆)</span></h2>
             <div style="display:flex; gap:8px; margin-bottom: 10px;">
-                <input type="text" id="schedule-name" placeholder="事項名稱..." style="flex:2; box-sizing:border-box;">
-                <input type="date" id="schedule-date" style="flex:1; box-sizing:border-box;">
-                <button onclick="addSchedule()" style="flex:1; background:#ff9800; color:#fff;">新增排程</button>
+                <input type="text" id="schedule-name" placeholder="事項名稱..." style="flex:2; box-sizing:border-box; background:#333; color:#fff; border:1px solid #555; padding:5px;">
+                <input type="date" id="schedule-date" style="flex:1; box-sizing:border-box; background:#333; color:#fff; border:1px solid #555; padding:5px;">
+                <button onclick="addSchedule()" style="flex:1; background:#00C8FF; color:#fff; font-weight:bold; border:none; cursor:pointer;">新增排程</button>
             </div>
             <div id="schedule-list" style="display:flex; flex-direction:column; gap:5px;"></div>
         </div>
 
-        <div class="panel" style="border-left-color: #9c27b0; margin-top: 15px;">
-            <h2 style="color: #9c27b0;">眾生行記 <span>(日記)</span></h2>
+        <div class="panel" style="border-left-color: #87CEEB; margin-top: 15px;">
+            <h2 style="color: #87CEEB;">眾生行記 <span>(日記)</span></h2>
             <div style="display:flex; flex-direction:column; gap:8px; margin-bottom: 10px;">
-                <textarea id="diary-input" placeholder="今天發生了什麼事..." rows="3" style="width:100%; box-sizing:border-box; resize:vertical;"></textarea>
-                <button onclick="addDiary()" style="background:#9c27b0; color:#fff; align-self:flex-end; padding: 5px 15px;">寫下紀錄</button>
+                
+                <textarea id="diary-input" placeholder="今天發生了什麼事..." rows="3" 
+                    style="width:100%; box-sizing:border-box; resize:vertical; 
+                           background:#333; color:#fff; border:1px solid #555; 
+                           padding:8px; font-family:inherit;"></textarea>
+                
+                <button onclick="addDiary()" style="background:#87CEEB; color:#fff; align-self:flex-end; padding: 5px 15px; font-weight:bold; border:none; cursor:pointer;">寫下紀錄</button>
             </div>
             <div id="diary-list" style="display:flex; flex-direction:column; gap:8px;"></div>
         </div>
 
     </div>
+
+
     
 <script>
     const DB_OPS = [
