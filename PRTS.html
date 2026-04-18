@@ -458,6 +458,9 @@ const VOICE_DB = {
 
 // --- [功能 2] 任務完成：抽一句播放「不顯示台詞」 (完整無省略版) ---
 function playRandomTaskVoice(taskId = null) {
+        let rawKeys = Object.keys(s.ops);
+    let matchCount = rawKeys.filter(id => VOICE_DB[id]).length;
+    alert("系統紀錄的幹員代號是：" + rawKeys[0] + "\n配對成功的數量：" + matchCount);
     let availableOps = Object.keys(s.ops).filter(id => VOICE_DB[id]);
     if(availableOps.length === 0) return;
     // 取得今天的日期以判定節慶
