@@ -151,7 +151,7 @@
         <div id="tab-home" class="tab-content active" style="padding: 0 5px;">
             <div class="viewport">
                 
-                <img src="請把你的照片網址或檔案路徑貼在這邊.jpg" id="ass-bg-img" class="bg-photo-full" style="display: none;">
+                <img src="請把你的照片網址或檔案路徑貼在這邊.jpg" id="ass-bg-img" class="bg-photo-full" style="display: none; cursor: pointer;" onclick="playAssistantVoice()">
                 <div class="assistant-bg" id="ass-bg-icon">👤</div>
                 
                 <div class="info-layer" id="ass-info"></div>
@@ -393,6 +393,44 @@
 
     
 <script>
+    // 請確保這兩行日期設定有放在代碼最上方 (VOICE_DB 前面)
+const DOCTOR_BIRTHDAY = "05-28"; 
+const NEW_YEAR_DATES = ["01-01", "01-02", "01-03"]; 
+// --- [功能 2] 任務完成：抽一句播放「不顯示台詞」 (完整無省略版) ---
+function playRandomTaskVoice(taskId = null) {
+    let availableOps = Object.keys(s.ops).filter(id => VOICE_DB[id]);
+    if(availableOps.length === 0) return;
+    // 取得今天的日期以判定節慶
+    let today = new Date();
+    let todayStr = String(today.getMonth() + 1).padStart(2, '0') + "-" + String(today.getDate()).padStart(2, '0');
+    let isBirthday = (todayStr === DOCTOR_BIRTHDAY);
+    let isNewYear = NEW_YEAR_DATES.includes(todayStr);
+    // 隨機選一個已擁有的幹員
+    let opId = availableOps[Math.floor(Math.random() * availableOps.length)];
+    let opData = VOICE_DB[opId];
+    let audioPath = "";
+    // 🏆 1. 生日/新年判定 (真正的程式碼在這裡！)
+    if (isBirthday || isNewYear) {
+        let eventKey = isBirthday ? "birthday" : "newyear";
+        if (opData[eventKey] && opData[eventKey].length > 0) {
+            audioPath = opData[eventKey][Math.floor(Math.random() * opData[eventKey].length)];
+        }
+    }
+    // 🏆 2. 特定任務判定 (如睡覺任務)
+    if (!audioPath && taskId && opData.task_specific && opData.task_specific[taskId]) {
+        audioPath = opData.task_specific[taskId][0]; 
+    }   
+    // 🏆 3. 一般任務：從大池子裡隨機抽一個音檔路徑
+    if (!audioPath) {
+        let chosen = opData.voices[Math.floor(Math.random() * opData.voices.length)];
+        audioPath = chosen.audio;
+    }
+    if(audioPath) {
+        if(currentAudio) { currentAudio.pause(); currentAudio.currentTime = 0; }
+        currentAudio = new Audio(audioPath);
+        currentAudio.play().catch(e => console.log("音檔播放受阻或路徑錯誤", e));
+    }
+}
     const DB_OPS = [
         { id: "莫斯提馬", n: "莫斯提馬", fav: "拉特蘭甜點" },
         { id: "菲亞梅塔", n: "菲亞梅塔", fav: "拉特蘭甜點" },
@@ -640,6 +678,9 @@
 
     function toggleDaily(id, w, isChecked) {
         s.dStatus[id] = isChecked; s.dExp += isChecked ? w : -w;
+        if (isChecked) {
+    playRandomTaskVoice(id);
+}
         const dailyToWeekly = { "d1":"w1", "d2":"w2", "d4":"w4", "d5":"w5", "d6":"w3", "d8":"w7" };
         let wId = dailyToWeekly[id];
         if(wId) {
@@ -689,7 +730,11 @@
     function toggleWeekly(id, max, isChecked) {
         if(!s.wProg[id]) s.wProg[id] = 0;
         let old = s.wProg[id]; s.wProg[id] += isChecked ? 1 : -1;
-        if(s.wProg[id] === max) s.wExp += 2; else if(old === max) s.wExp -= 2; updateUI();
+        if(s.wProg[id] === max) s.wExp += 2; else if(old === max) s.wExp -= 2; 
+        if (isChecked) {
+    playRandomTaskVoice(id);
+}
+        updateUI();
     }
 
     function claimWeekly(idx, req) {
