@@ -398,7 +398,7 @@ const DOCTOR_BIRTHDAY = "05-28";
 const NEW_YEAR_DATES = ["01-01", "01-02", "01-03"]; 
     // --- 語音大水庫 (籤筒) 開始 ---
 const VOICE_DB = {
-    "texas": { 
+    "德克薩斯": { 
         name: "德克薩斯",
         // 一般台詞池：把 1~10 還有異格的 e1~e10 全包進去
         voices: [
@@ -431,7 +431,7 @@ const VOICE_DB = {
         newyear: ["audio/texas.ny.wav"],
         birthday: ["audio/texas.hbd.wav"]
     },
-    "mostima": {
+    "莫斯提馬": {
         name: "莫斯提馬",
         voices: [
             { text: "嗨，博士。", audio: "audio/mostima1.wav" },
@@ -458,9 +458,6 @@ const VOICE_DB = {
 
 // --- [功能 2] 任務完成：抽一句播放「不顯示台詞」 (完整無省略版) ---
 function playRandomTaskVoice(taskId = null) {
-        let rawKeys = Object.keys(s.ops);
-    let matchCount = rawKeys.filter(id => VOICE_DB[id]).length;
-    alert("系統紀錄的幹員代號是：" + rawKeys[0] + "\n配對成功的數量：" + matchCount);
     let availableOps = Object.keys(s.ops).filter(id => VOICE_DB[id]);
     if(availableOps.length === 0) return;
     // 取得今天的日期以判定節慶
