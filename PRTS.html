@@ -1475,26 +1475,22 @@ window.addEventListener('DOMContentLoaded', () => {
     renderSchedules();
     renderDiaries();
 });
-// --- 全域監聽雷達：自動幫所有按鈕和助理加上語音 ---
+// --- 全域監聽雷達 (強制破防版) ---
 document.addEventListener('click', function(event) {
     let target = event.target;
-
-    // 🎯 1. 攔截「助理小姐」的點擊
-    // 根據您的代碼，助理圖片的 ID 是 ass-bg-img，圖示是 ass-bg-icon
-    if (target.id === 'ass-bg-img' || target.id === 'ass-bg-icon') {
+    
+    // 🎯 1. 強制攔截「助理小姐」 (只要 ID 或 Class 包含 ass 就觸發)
+    if ((target.id && target.id.includes('ass')) || (target.className && target.className.includes('ass'))) {
         if (typeof playAssistantVoice === 'function') {
             playAssistantVoice();
         }
-        return; // 助理講完話就結束這回合，不往下執行
+        return; 
     }
 
-    // 🎯 2. 攔截「任務與活動」的點擊
-    // 取得點擊目標附近的文字
-    let elementWithText = target.closest('button, div, li, a') || target;
-    let targetText = elementWithText.innerText || elementWithText.textContent || "";
-
-    // 💡 博士，未來的擴充都在這裡！
-    // 只要把您未來會新增的「按鈕文字」或「活動名稱」加進這個陣列即可：
+    // 🎯 2. 強制攔截「任務與活動」
+    let elementWithText = target.closest('button, div, li, a, span, p') || target;
+    let targetText = (elementWithText.innerText || elementWithText.textContent || "").trim();
+    
     const triggerKeywords = [
         "尋訪", 
         "特勤任務", 
@@ -1503,7 +1499,6 @@ document.addEventListener('click', function(event) {
         "空想花庭", 
         "喧鬧法則", 
         "眾生行記"
-        // 未來如果有 "長夜臨光"，就在這行下面加: ,"長夜臨光"
     ];
 
     // 檢查點擊的文字是否包含上面的關鍵字
@@ -1511,12 +1506,11 @@ document.addEventListener('click', function(event) {
 
     if (shouldPlay) {
         if (typeof playRandomTaskVoice === 'function') {
-            // 如果需要針對特定任務發出特定語音，也可以在這裡抓取 ID
-            // 目前先統一呼叫隨機任務語音
             playRandomTaskVoice(); 
         }
     }
-});
+}, true); // 👈 博士，就是這個 true，它能在手機上強行突破其他程式的封鎖！
+
 
 </script>
 </body>
