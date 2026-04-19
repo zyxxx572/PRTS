@@ -549,16 +549,13 @@ function playRandomTaskVoice(taskId = null) {
 
 }
 
- // --- 助理專屬發聲函數 (暴力偵錯版) ---
+// --- 助理專屬發聲函數 (純淨最終版) ---
 function playAssistantVoice() {
-    // 1. 強制彈窗！如果按了助理沒跳出這個視窗，代表 HTML 的 onclick 根本沒接成功
-    alert("系統抓到的助理名字是：" + s.assistant); 
-
     let assistantName = s.assistant || "德克薩斯"; 
     let opData = VOICE_DB[assistantName];
 
+    // 如果找不到該助理的語音，預設抓資料庫裡的第一個幹員來頂替
     if (!opData) {
-        // 如果找不到助理，隨機抓一個有聲音的來播
         let keys = Object.keys(VOICE_DB);
         opData = VOICE_DB[keys[0]];
     }
@@ -571,11 +568,9 @@ function playAssistantVoice() {
             currentAudio.currentTime = 0;
         }
         currentAudio = new Audio(chosen.audio);
-        currentAudio.play().catch(e => alert("播放失敗，錯誤代碼：" + e));
-    } else {
-        alert("找不到這位幹員的語音資料！");
+        currentAudio.play().catch(e => console.log("播放失敗，請檢查音檔路徑或網頁互動限制", e));
     }
-}   
+}
     const DB_OPS = [
         { id: "莫斯提馬", n: "莫斯提馬", fav: "拉特蘭甜點" },
         { id: "菲亞梅塔", n: "菲亞梅塔", fav: "拉特蘭甜點" },
