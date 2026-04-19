@@ -1498,27 +1498,27 @@ window.addEventListener('DOMContentLoaded', () => {
     renderDiaries();
 });
 
-// 專門給抽卡用的：播報特定幹員的入職語音
+// --- 尋訪專屬：入職語音函數 (代打防呆版) ---
 function playObtainedVoice(opName) {
-    // 檢查語音庫有沒有這位幹員
+    console.log("準備呼叫幹員: " + opName);
     let opData = VOICE_DB[opName];
     
-    // 如果沒這人，或是這人沒語音，就隨機找個德克薩斯或莫斯提馬頂替（或者不播）
+    // 防呆機制：如果這名幹員還沒實裝音檔，強制請德克薩斯代打！
     if (!opData || !opData.voices || opData.voices.length === 0) {
-        console.log("此幹員尚未實裝語音:", opName);
-        return;
+        console.log("找不到 " + opName + " 的音檔，呼叫德克薩斯支援！");
+        opData = VOICE_DB["德克薩斯"]; // 👈 請確保您 VOICE_DB 裡有德克薩斯的資料
     }
 
-    // 播放該幹員的第一條語音 (通常入職語音會放在 voices 的第一條)
-    // 如果您有專門的 "onboard" 欄位，可以改成 opData.onboard[0]
-    let audioPath = opData.voices[0].audio; 
-
-    if (currentAudio) {
-        currentAudio.pause();
-        currentAudio.currentTime = 0;
+    if (opData && opData.voices && opData.voices.length > 0) {
+        let audioPath = opData.voices[0].audio; // 抓第一句入職語音
+        
+        if (typeof currentAudio !== 'undefined' && currentAudio) {
+            currentAudio.pause();
+            currentAudio.currentTime = 0;
+        }
+        currentAudio = new Audio(audioPath);
+        currentAudio.play().catch(e => alert("播放失敗，錯誤代碼：" + e));
     }
-    currentAudio = new Audio(audioPath);
-    currentAudio.play().catch(e => console.log("入職語音播放失敗:", e));
 }
 
 </script>
