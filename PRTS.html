@@ -395,6 +395,10 @@
     // 請確保這兩行日期設定有放在代碼最上方 (VOICE_DB 前面)
 const DOCTOR_BIRTHDAY = "05-28"; 
 const NEW_YEAR_DATES = ["01-01", "01-02", "01-03"]; 
+// --- 抽卡展示序列系統專用變數 ---
+let gachaQueue = [];       // 用來裝這次抽到的所有幹員名單
+let gachaCurrentIndex = 0; // 記錄目前展示到第幾位
+    
 let currentAudio = null;
     // --- 語音大水庫 (籤筒) 開始 ---
 const VOICE_DB = {
@@ -1099,30 +1103,105 @@ window.deleteTask = function(id) {
         } else { alert("憑證不足！"); }
     }
 
-    function gachaRoll(times) {
-        let costOru = times * 600; let costPull = times;
-        if (s.pull >= costPull) { s.pull -= costPull; }
-        else if (s.oru >= costOru) { s.oru -= costOru; }
-        else { alert("資源不足！"); return; }
+    // 1. 核心抽卡引擎 (排隊版)
+function gachaRoll(times) {
+    let costOru = times * 600; let costPull = times;
+    if (s.pull >= costPull) { s.pull -= costPull; }
+    else if (s.oru >= costOru) { s.oru -= costOru; }
+    else { alert("資源不足！"); return; }
 
-        let resultHtml = ""; let newSkinCount = 0; let refundOru = 0;
+    // 每次抽卡前，把排隊列表清空
+    gachaQueue = [];
+    gachaCurrentIndex = 0;
+    
+    let newSkinCount = 0; 
+    let totalRefundOru = 0;
 
-        for(let i=0; i<times; i++) {
-            let randOp = DB_OPS[Math.floor(Math.random() * DB_OPS.length)];
-            let isDupe = s.ops[randOp.id];
-            
-            if(isDupe) { s.cert += 10; resultHtml += `<div style="margin:5px 0;">${randOp.n} <span style="color:#888; font-size:0.8rem;">(🎫+10)</span></div>`; } 
-            else { s.ops[randOp.id] = { trust: 0, skin: false }; resultHtml += `<div style="margin:5px 0; color:var(--ark-yellow);">★ ${randOp.n} (新加入) ★</div>`; newSkinCount++; }
-            if(s.relics.includes('c_syra')) refundOru += 20; 
+    // 將抽到的幹員依序塞進排隊列表
+    for(let i=0; i<times; i++) {
+        let randOp = DB_OPS[Math.floor(Math.random() * DB_OPS.length)];
+        let isDupe = s.ops[randOp.id];
+        
+        let opData = {
+            name: randOp.n,
+            isNew: !isDupe,
+            certGain: isDupe ? 10 : 0,
+            refund: 0
+        };
+
+        if(isDupe) { 
+            s.cert += 10; 
+        } else { 
+            s.ops[randOp.id] = { trust: 0, skin: false }; 
+            newSkinCount++; 
         }
-
-        if(refundOru > 0) { s.oru += refundOru; resultHtml += `<hr><div style="font-size:0.8rem; color:#aaa;">【千層酥空盒】返還 💎${refundOru}</div>`; }
-        if(times === 10 && newSkinCount >= 2) { if(!s.unlockedMedals.includes('m_gacha')) s.unlockedMedals.push('m_gacha'); }
-
-        document.getElementById('gacha-result-name').innerHTML = resultHtml;
-        document.getElementById('gacha-overlay').style.display = 'flex';
-        updateUI();
+        
+        if(s.relics.includes('c_syra')) {
+            totalRefundOru += 20;
+            opData.refund = 20;
+        }
+        
+        // 記錄好這位幹員的資料，請他去排隊
+        gachaQueue.push(opData);
     }
+
+    if(totalRefundOru > 0) { s.oru += totalRefundOru; }
+    if(times === 10 && newSkinCount >= 2) { 
+        if(!s.unlockedMedals.includes('m_gacha')) s.unlockedMedals.push('m_gacha'); 
+    }
+
+    updateUI();
+    
+    // 抽卡計算完畢，立刻呼叫第一位幹員出場！
+    showNextGachaResult();
+}
+
+// 2. 負責「一個一個展示」的函數
+function showNextGachaResult() {
+    let overlay = document.getElementById('gacha-overlay');
+    let resultContainer = document.getElementById('gacha-result-name');
+
+    // 如果已經展示完最後一個幹員了
+    if (gachaCurrentIndex >= gachaQueue.length) {
+        overlay.style.display = 'none'; // 關閉抽卡畫面
+        return;
+    }
+
+    // 抓出目前排在最前面的幹員
+    let currentOp = gachaQueue[gachaCurrentIndex];
+
+    // --- 這裡為未來的圖片留好了位置！ ---
+    // 未來您可以在這裡加入類似 <img src="images/${currentOp.name}.png"> 的代碼
+    let htmlContent = `
+        <div style="text-align: center; animation: fadeIn 0.3s;">
+            <h2 style="color: ${currentOp.isNew ? 'var(--ark-yellow)' : 'white'};">
+                ${currentOp.isNew ? '★ 新加入 ★' : '獲得幹員'}
+            </h2>
+            <h1 style="font-size: 2.5rem; margin: 10px 0; color: ${currentOp.isNew ? 'var(--ark-yellow)' : 'white'};">
+                ${currentOp.name}
+            </h1>
+            ${currentOp.certGain > 0 ? `<p style="color:#888;">(🎫 憑證 +${currentOp.certGain})</p>` : ''}
+            ${currentOp.refund > 0 ? `<p style="color:#aaa;">【千層酥空盒】返還 💎${currentOp.refund}</p>` : ''}
+            <p style="font-size: 0.9rem; margin-top: 30px; color: #ccc;">(點擊畫面繼續)</p>
+        </div>
+    `;
+
+    resultContainer.innerHTML = htmlContent;
+    overlay.style.display = 'flex';
+
+    // 綁定點擊事件：點擊整個黑底畫面，就換下一位
+    overlay.onclick = function() {
+        showNextGachaResult();
+    };
+
+    // 播放這位幹員的語音！
+    if (typeof playObtainedVoice === 'function') {
+        playObtainedVoice(currentOp.name);
+    }
+
+    // 索引值 +1，準備下次點擊時叫下一位
+    gachaCurrentIndex++;
+}
 
     function renderArchive() {
         let html = "";
