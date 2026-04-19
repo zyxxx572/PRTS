@@ -234,9 +234,8 @@
                 <h2>幹員尋訪</h2>
                 <p style="font-size: 0.85rem; color: #aaa;">重複獲得幹員將轉化為憑證 🎫。若持有【特製千層酥空盒】每抽返還 20 💎。</p>
                 <div style="display:flex; gap:10px;">
-                <button onclick="gachaRoll(1); playRandomTaskVoice()" style="flex:1; padding:15px; font-size:1.1rem;">單次尋訪<br><span style="font-size:0.8rem">(600💎/1🎟️)</span></button>
-                <button onclick="gachaRoll(10); playRandomTaskVoice()" style="flex:1; padding:15px; font-size:1.1rem; background:var(--ark-blue); color:white;">十連尋訪<br><span style="font-size:0.8rem">(6000💎/10🎟️)</span></button>
-                </div>
+                <button onclick="gachaRoll(1)" style="flex:1; padding:15px; font-size:1.1rem;">單次尋訪<br><span style="font-size:0.8rem">(600💎/1🎟️)</span></button>
+                <button onclick="gachaRoll(10)" style="flex:1; padding:15px; font-size:1.1rem; background:var(--ark-blue); color:white;">十連尋訪<br><span style="font-size:0.8rem">(6000💎/10🎟️)</span></button>
             </div>
             <div class="panel">
                 <h2 style="color: #4caf50;">憑證商店 <span id="shop-discount-tag" style="font-size:0.8rem; color:var(--ark-red); display:none;">(VIP 9折)</span></h2>
@@ -549,6 +548,34 @@ function playRandomTaskVoice(taskId = null) {
     }
 
 }
+
+ // --- 助理專屬發聲函數 (暴力偵錯版) ---
+function playAssistantVoice() {
+    // 1. 強制彈窗！如果按了助理沒跳出這個視窗，代表 HTML 的 onclick 根本沒接成功
+    alert("系統抓到的助理名字是：" + s.assistant); 
+
+    let assistantName = s.assistant || "德克薩斯"; 
+    let opData = VOICE_DB[assistantName];
+
+    if (!opData) {
+        // 如果找不到助理，隨機抓一個有聲音的來播
+        let keys = Object.keys(VOICE_DB);
+        opData = VOICE_DB[keys[0]];
+    }
+
+    if (opData && opData.voices && opData.voices.length > 0) {
+        let chosen = opData.voices[Math.floor(Math.random() * opData.voices.length)];
+        
+        if (typeof currentAudio !== 'undefined' && currentAudio) { 
+            currentAudio.pause(); 
+            currentAudio.currentTime = 0;
+        }
+        currentAudio = new Audio(chosen.audio);
+        currentAudio.play().catch(e => alert("播放失敗，錯誤代碼：" + e));
+    } else {
+        alert("找不到這位幹員的語音資料！");
+    }
+}   
     const DB_OPS = [
         { id: "莫斯提馬", n: "莫斯提馬", fav: "拉特蘭甜點" },
         { id: "菲亞梅塔", n: "菲亞梅塔", fav: "拉特蘭甜點" },
@@ -1476,7 +1503,28 @@ window.addEventListener('DOMContentLoaded', () => {
     renderDiaries();
 });
 
+// 專門給抽卡用的：播報特定幹員的入職語音
+function playObtainedVoice(opName) {
+    // 檢查語音庫有沒有這位幹員
+    let opData = VOICE_DB[opName];
+    
+    // 如果沒這人，或是這人沒語音，就隨機找個德克薩斯或莫斯提馬頂替（或者不播）
+    if (!opData || !opData.voices || opData.voices.length === 0) {
+        console.log("此幹員尚未實裝語音:", opName);
+        return;
+    }
 
+    // 播放該幹員的第一條語音 (通常入職語音會放在 voices 的第一條)
+    // 如果您有專門的 "onboard" 欄位，可以改成 opData.onboard[0]
+    let audioPath = opData.voices[0].audio; 
+
+    if (currentAudio) {
+        currentAudio.pause();
+        currentAudio.currentTime = 0;
+    }
+    currentAudio = new Audio(audioPath);
+    currentAudio.play().catch(e => console.log("入職語音播放失敗:", e));
+}
 
 </script>
 </body>
