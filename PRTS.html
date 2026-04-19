@@ -152,7 +152,7 @@
             <div class="viewport">
                 
                 <img src="請把你的照片網址或檔案路徑貼在這邊.jpg" id="ass-bg-img" class="bg-photo-full" style="display: none; cursor: pointer;" onclick="playAssistantVoice()">
-                <div class="assistant-bg" id="ass-bg-icon">👤</div>
+<div class="assistant-bg" id="ass-bg-icon" onclick="playAssistantVoice()" style="cursor: pointer;">👤</div>
                 
                 <div class="info-layer" id="ass-info"></div>
                 
@@ -234,8 +234,8 @@
                 <h2>幹員尋訪</h2>
                 <p style="font-size: 0.85rem; color: #aaa;">重複獲得幹員將轉化為憑證 🎫。若持有【特製千層酥空盒】每抽返還 20 💎。</p>
                 <div style="display:flex; gap:10px;">
-                    <button onclick="gachaRoll(1)" style="flex:1; padding:15px; font-size:1.1rem;">單次尋訪<br><span style="font-size:0.8rem">(600💎/1🎟️)</span></button>
-                    <button onclick="gachaRoll(10)" style="flex:1; padding:15px; font-size:1.1rem; background:var(--ark-blue); color:white;">十連尋訪<br><span style="font-size:0.8rem">(6000💎/10🎟️)</span></button>
+                <button onclick="gachaRoll(1); playRandomTaskVoice()" style="flex:1; padding:15px; font-size:1.1rem;">單次尋訪<br><span style="font-size:0.8rem">(600💎/1🎟️)</span></button>
+                <button onclick="gachaRoll(10); playRandomTaskVoice()" style="flex:1; padding:15px; font-size:1.1rem; background:var(--ark-blue); color:white;">十連尋訪<br><span style="font-size:0.8rem">(6000💎/10🎟️)</span></button>
                 </div>
             </div>
             <div class="panel">
@@ -1475,41 +1475,7 @@ window.addEventListener('DOMContentLoaded', () => {
     renderSchedules();
     renderDiaries();
 });
-// --- 全域監聽雷達 (強制破防版) ---
-document.addEventListener('click', function(event) {
-    let target = event.target;
-    
-    // 🎯 1. 強制攔截「助理小姐」 (只要 ID 或 Class 包含 ass 就觸發)
-    if ((target.id && target.id.includes('ass')) || (target.className && target.className.includes('ass'))) {
-        if (typeof playAssistantVoice === 'function') {
-            playAssistantVoice();
-        }
-        return; 
-    }
 
-    // 🎯 2. 強制攔截「任務與活動」
-    let elementWithText = target.closest('button, div, li, a, span, p') || target;
-    let targetText = (elementWithText.innerText || elementWithText.textContent || "").trim();
-    
-    const triggerKeywords = [
-        "尋訪", 
-        "特勤任務", 
-        "主線任務", 
-        "吾導先路", 
-        "空想花庭", 
-        "喧鬧法則", 
-        "眾生行記"
-    ];
-
-    // 檢查點擊的文字是否包含上面的關鍵字
-    let shouldPlay = triggerKeywords.some(keyword => targetText.includes(keyword));
-
-    if (shouldPlay) {
-        if (typeof playRandomTaskVoice === 'function') {
-            playRandomTaskVoice(); 
-        }
-    }
-}, true); // 👈 博士，就是這個 true，它能在手機上強行突破其他程式的封鎖！
 
 
 </script>
