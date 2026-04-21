@@ -459,95 +459,50 @@ const VOICE_DB = {
 
 // --- [功能 2] 任務完成：抽一句播放「不顯示台詞」 (完整無省略版) ---
 function playRandomTaskVoice(taskId = null) {
-
-    // 取得所有擁有且有語音的幹員 (現在配對成功是 2，所以沒問題)
-
+    // 取得所有擁有且有語音的幹員 (現在配對成功是 2，代表這行沒問題了)
     let availableOps = Object.keys(s.ops).filter(id => VOICE_DB[id]);
-
+    
     if (availableOps.length === 0) return;
 
-
-
     // 隨機選一位幹員
-
     let opId = availableOps[Math.floor(Math.random() * availableOps.length)];
-
     let opData = VOICE_DB[opId];
-
     let audioPath = "";
 
-
-
-    // --- 彩蛋判定：取得今天日期 ---
-
+    // 取得日期判定彩蛋
     let today = new Date();
-
     let todayStr = String(today.getMonth() + 1).padStart(2, '0') + "-" + String(today.getDate()).padStart(2, '0');
-
     let isBirthday = (todayStr === DOCTOR_BIRTHDAY);
-
     let isNewYear = NEW_YEAR_DATES.includes(todayStr);
 
-
-
-    // 優先序 1：生日或新年祝福
-
+    // 1. 優先判定生日/新年
     if (isBirthday || isNewYear) {
-
         let eventKey = isBirthday ? "birthday" : "newyear";
-
         if (opData[eventKey] && opData[eventKey].length > 0) {
-
             audioPath = opData[eventKey][Math.floor(Math.random() * opData[eventKey].length)];
-
         }
-
     }
 
-
-
-    // 優先序 2：特定任務判定 (例如點擊 w7 任務)
-
+    // 2. 判定特定任務語音 (如 w7)
     if (!audioPath && taskId && opData.task_specific && opData.task_specific[taskId]) {
+        audioPath = opData.task_specific[taskId][0];
+    } 
 
-        audioPath = opData.task_specific[taskId][0]; 
-
-    }   
-
-
-
-    // 優先序 3：一般隨機語音
-
-    if (!audioPath) {
-
+    // 3. 一般隨機台詞
+    if (!audioPath && opData.voices && opData.voices.length > 0) {
         let chosen = opData.voices[Math.floor(Math.random() * opData.voices.length)];
-
         audioPath = chosen.audio;
-
     }
-
-
 
     // 執行播放
-
     if (audioPath) {
-
         if (currentAudio) {
-
             currentAudio.pause();
-
             currentAudio.currentTime = 0;
-
         }
-
         currentAudio = new Audio(audioPath);
-
-        // 手機版 Safari 必須直接執行 .play()，不能有 alert 擋在前面
-
-        currentAudio.play().catch(e => console.log("播放失敗:", e));
-
+        currentAudio.play().catch(e => console.log("音檔播放受阻", e));
     }
-
 }
     const DB_OPS = [
         { id: "莫斯提馬", n: "莫斯提馬", fav: "拉特蘭甜點" },
