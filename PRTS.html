@@ -152,7 +152,7 @@
             <div class="viewport">
                 
                 <img src="請把你的照片網址或檔案路徑貼在這邊.jpg" id="ass-bg-img" class="bg-photo-full" style="display: none; cursor: pointer;" onclick="playAssistantVoice()">
-<div class="assistant-bg" id="ass-bg-icon" onclick="playAssistantVoice()" style="cursor: pointer;">👤</div>
+                <div class="assistant-bg" id="ass-bg-icon">👤</div>
                 
                 <div class="info-layer" id="ass-info"></div>
                 
@@ -234,8 +234,9 @@
                 <h2>幹員尋訪</h2>
                 <p style="font-size: 0.85rem; color: #aaa;">重複獲得幹員將轉化為憑證 🎫。若持有【特製千層酥空盒】每抽返還 20 💎。</p>
                 <div style="display:flex; gap:10px;">
-                <button onclick="gachaRoll(1)" style="flex:1; padding:15px; font-size:1.1rem;">單次尋訪<br><span style="font-size:0.8rem">(600💎/1🎟️)</span></button>
-                <button onclick="gachaRoll(10)" style="flex:1; padding:15px; font-size:1.1rem; background:var(--ark-blue); color:white;">十連尋訪<br><span style="font-size:0.8rem">(6000💎/10🎟️)</span></button>
+                    <button onclick="gachaRoll(1)" style="flex:1; padding:15px; font-size:1.1rem;">單次尋訪<br><span style="font-size:0.8rem">(600💎/1🎟️)</span></button>
+                    <button onclick="gachaRoll(10)" style="flex:1; padding:15px; font-size:1.1rem; background:var(--ark-blue); color:white;">十連尋訪<br><span style="font-size:0.8rem">(6000💎/10🎟️)</span></button>
+                </div>
             </div>
             <div class="panel">
                 <h2 style="color: #4caf50;">憑證商店 <span id="shop-discount-tag" style="font-size:0.8rem; color:var(--ark-red); display:none;">(VIP 9折)</span></h2>
@@ -395,10 +396,6 @@
     // 請確保這兩行日期設定有放在代碼最上方 (VOICE_DB 前面)
 const DOCTOR_BIRTHDAY = "05-28"; 
 const NEW_YEAR_DATES = ["01-01", "01-02", "01-03"]; 
-// --- 抽卡展示序列系統專用變數 ---
-let gachaQueue = [];       // 用來裝這次抽到的所有幹員名單
-let gachaCurrentIndex = 0; // 記錄目前展示到第幾位
-    
 let currentAudio = null;
     // --- 語音大水庫 (籤筒) 開始 ---
 const VOICE_DB = {
@@ -551,29 +548,6 @@ function playRandomTaskVoice(taskId = null) {
 
     }
 
-}
-
-// --- 助理專屬發聲函數 (純淨最終版) ---
-function playAssistantVoice() {
-    let assistantName = s.assistant || "德克薩斯"; 
-    let opData = VOICE_DB[assistantName];
-
-    // 如果找不到該助理的語音，預設抓資料庫裡的第一個幹員來頂替
-    if (!opData) {
-        let keys = Object.keys(VOICE_DB);
-        opData = VOICE_DB[keys[0]];
-    }
-
-    if (opData && opData.voices && opData.voices.length > 0) {
-        let chosen = opData.voices[Math.floor(Math.random() * opData.voices.length)];
-        
-        if (typeof currentAudio !== 'undefined' && currentAudio) { 
-            currentAudio.pause(); 
-            currentAudio.currentTime = 0;
-        }
-        currentAudio = new Audio(chosen.audio);
-        currentAudio.play().catch(e => console.log("播放失敗，請檢查音檔路徑或網頁互動限制", e));
-    }
 }
     const DB_OPS = [
         { id: "莫斯提馬", n: "莫斯提馬", fav: "拉特蘭甜點" },
@@ -1103,105 +1077,30 @@ window.deleteTask = function(id) {
         } else { alert("憑證不足！"); }
     }
 
-    // 1. 核心抽卡引擎 (排隊版)
-function gachaRoll(times) {
-    let costOru = times * 600; let costPull = times;
-    if (s.pull >= costPull) { s.pull -= costPull; }
-    else if (s.oru >= costOru) { s.oru -= costOru; }
-    else { alert("資源不足！"); return; }
+    function gachaRoll(times) {
+        let costOru = times * 600; let costPull = times;
+        if (s.pull >= costPull) { s.pull -= costPull; }
+        else if (s.oru >= costOru) { s.oru -= costOru; }
+        else { alert("資源不足！"); return; }
 
-    // 每次抽卡前，把排隊列表清空
-    gachaQueue = [];
-    gachaCurrentIndex = 0;
-    
-    let newSkinCount = 0; 
-    let totalRefundOru = 0;
+        let resultHtml = ""; let newSkinCount = 0; let refundOru = 0;
 
-    // 將抽到的幹員依序塞進排隊列表
-    for(let i=0; i<times; i++) {
-        let randOp = DB_OPS[Math.floor(Math.random() * DB_OPS.length)];
-        let isDupe = s.ops[randOp.id];
-        
-        let opData = {
-            name: randOp.n,
-            isNew: !isDupe,
-            certGain: isDupe ? 10 : 0,
-            refund: 0
-        };
-
-        if(isDupe) { 
-            s.cert += 10; 
-        } else { 
-            s.ops[randOp.id] = { trust: 0, skin: false }; 
-            newSkinCount++; 
+        for(let i=0; i<times; i++) {
+            let randOp = DB_OPS[Math.floor(Math.random() * DB_OPS.length)];
+            let isDupe = s.ops[randOp.id];
+            
+            if(isDupe) { s.cert += 10; resultHtml += `<div style="margin:5px 0;">${randOp.n} <span style="color:#888; font-size:0.8rem;">(🎫+10)</span></div>`; } 
+            else { s.ops[randOp.id] = { trust: 0, skin: false }; resultHtml += `<div style="margin:5px 0; color:var(--ark-yellow);">★ ${randOp.n} (新加入) ★</div>`; newSkinCount++; }
+            if(s.relics.includes('c_syra')) refundOru += 20; 
         }
-        
-        if(s.relics.includes('c_syra')) {
-            totalRefundOru += 20;
-            opData.refund = 20;
-        }
-        
-        // 記錄好這位幹員的資料，請他去排隊
-        gachaQueue.push(opData);
+
+        if(refundOru > 0) { s.oru += refundOru; resultHtml += `<hr><div style="font-size:0.8rem; color:#aaa;">【千層酥空盒】返還 💎${refundOru}</div>`; }
+        if(times === 10 && newSkinCount >= 2) { if(!s.unlockedMedals.includes('m_gacha')) s.unlockedMedals.push('m_gacha'); }
+
+        document.getElementById('gacha-result-name').innerHTML = resultHtml;
+        document.getElementById('gacha-overlay').style.display = 'flex';
+        updateUI();
     }
-
-    if(totalRefundOru > 0) { s.oru += totalRefundOru; }
-    if(times === 10 && newSkinCount >= 2) { 
-        if(!s.unlockedMedals.includes('m_gacha')) s.unlockedMedals.push('m_gacha'); 
-    }
-
-    updateUI();
-    
-    // 抽卡計算完畢，立刻呼叫第一位幹員出場！
-    showNextGachaResult();
-}
-
-// 2. 負責「一個一個展示」的函數
-function showNextGachaResult() {
-    let overlay = document.getElementById('gacha-overlay');
-    let resultContainer = document.getElementById('gacha-result-name');
-
-    // 如果已經展示完最後一個幹員了
-    if (gachaCurrentIndex >= gachaQueue.length) {
-        overlay.style.display = 'none'; // 關閉抽卡畫面
-        return;
-    }
-
-    // 抓出目前排在最前面的幹員
-    let currentOp = gachaQueue[gachaCurrentIndex];
-
-    // --- 這裡為未來的圖片留好了位置！ ---
-    // 未來您可以在這裡加入類似 <img src="images/${currentOp.name}.png"> 的代碼
-    let htmlContent = `
-        <div style="text-align: center; animation: fadeIn 0.3s;">
-            <h2 style="color: ${currentOp.isNew ? 'var(--ark-yellow)' : 'white'};">
-                ${currentOp.isNew ? '★ 新加入 ★' : '獲得幹員'}
-            </h2>
-            <h1 style="font-size: 2.5rem; margin: 10px 0; color: ${currentOp.isNew ? 'var(--ark-yellow)' : 'white'};">
-                ${currentOp.name}
-            </h1>
-            ${currentOp.certGain > 0 ? `<p style="color:#888;">(🎫 憑證 +${currentOp.certGain})</p>` : ''}
-            ${currentOp.refund > 0 ? `<p style="color:#aaa;">【千層酥空盒】返還 💎${currentOp.refund}</p>` : ''}
-            <p style="font-size: 0.9rem; margin-top: 30px; color: #ccc;">(點擊畫面繼續)</p>
-        </div>
-    `;
-
-    resultContainer.innerHTML = htmlContent;
-    overlay.style.display = 'flex';
-
-    // 綁定點擊事件：點擊整個黑底畫面，就換下一位
-    overlay.onclick = function() {
-        showNextGachaResult();
-    };
-
-    // 播放這位幹員的語音！
-    if (typeof playObtainedVoice === 'function') {
-        playObtainedVoice(currentOp.name);
-    }
-
-    // 索引值 +1，準備下次點擊時叫下一位
-    gachaCurrentIndex++;
-}
 
     function renderArchive() {
         let html = "";
@@ -1576,30 +1475,6 @@ window.addEventListener('DOMContentLoaded', () => {
     renderSchedules();
     renderDiaries();
 });
-
-// --- 尋訪專屬：入職語音函數 (代打防呆版) ---
-function playObtainedVoice(opName) {
-    console.log("準備呼叫幹員: " + opName);
-    let opData = VOICE_DB[opName];
-    
-    // 防呆機制：如果這名幹員還沒實裝音檔，強制請德克薩斯代打！
-    if (!opData || !opData.voices || opData.voices.length === 0) {
-        console.log("找不到 " + opName + " 的音檔，呼叫德克薩斯支援！");
-        opData = VOICE_DB["德克薩斯"]; // 👈 請確保您 VOICE_DB 裡有德克薩斯的資料
-    }
-
-    if (opData && opData.voices && opData.voices.length > 0) {
-        let audioPath = opData.voices[0].audio; // 抓第一句入職語音
-        
-        if (typeof currentAudio !== 'undefined' && currentAudio) {
-            currentAudio.pause();
-            currentAudio.currentTime = 0;
-        }
-        currentAudio = new Audio(audioPath);
-        currentAudio.play().catch(e => alert("播放失敗，錯誤代碼：" + e));
-    }
-}
-
 </script>
 </body>
 </html>
